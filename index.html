@@ -773,14 +773,22 @@
         function renderizarCategorias() {
             const container = document.getElementById('categoriasContainer');
             if (!container) return;
-            container.innerHTML = `<button class="categoria-btn active" data-cat="todos">📋 Todos</button>`;
+            container.innerHTML = ''; // Limpa para reconstruir de forma consistente
             
-            const sorted = Array.from(categoriasSet).sort();
-            for (let cat of sorted) {
+            const allCats = ['todos', ...Array.from(categoriasSet).sort()];
+
+            for (const cat of allCats) {
                 const btn = document.createElement('button');
                 btn.className = 'categoria-btn';
                 btn.setAttribute('data-cat', cat);
-                btn.innerText = categoriaDisplay[cat] || cat;
+                btn.innerText = cat === 'todos' 
+                    ? '📋 Todos' 
+                    : categoriaDisplay[cat] || cat;
+
+                if (cat === categoriaAtiva) {
+                    btn.classList.add('active');
+                }
+
                 btn.onclick = () => {
                     document.querySelectorAll('.categoria-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
@@ -824,6 +832,16 @@
             container.innerHTML = '<div class="loading">🔄 Carregando...</div>';
             
             const profissionais = await carregarProfissionais();
+
+            // Após carregar, o `categoriasSet` pode ter novos itens.
+            // Verificamos se o número de botões de categoria renderizados corresponde ao tamanho do Set.
+            // Isso corrige o bug de uma nova categoria não aparecer na barra superior.
+            const renderedCatButtons = document.querySelectorAll('#categoriasContainer .categoria-btn');
+            if (renderedCatButtons.length !== categoriasSet.size + 1) { // +1 para o botão "Todos"
+                renderizarCategorias();
+                atualizarSelectCategorias();
+            }
+            
             let filtrados = categoriaAtiva === 'todos' ? profissionais : profissionais.filter(p => p.categoria === categoriaAtiva);
             
             if (filtrados.length === 0) {
