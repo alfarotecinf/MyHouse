@@ -546,6 +546,47 @@
             padding: 50px 20px;
             color: #F97316;
         }
+
+        /* LIGHTBOX PARA MÍDIA */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        .lightbox-overlay.show {
+            display: flex;
+        }
+        .lightbox-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .lightbox-content img, .lightbox-content video {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+            border-radius: 8px;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            font-weight: 300;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -620,6 +661,14 @@
     </div>
 </div>
 
+<!-- LIGHTBOX PARA MÍDIA -->
+<div id="lightboxOverlay" class="lightbox-overlay">
+    <span class="lightbox-close">&times;</span>
+    <div id="lightboxContent" class="lightbox-content">
+        <!-- Imagem ou vídeo será inserido aqui via JS -->
+    </div>
+</div>
+
 <script>
     (function() {
         // ============================================
@@ -645,6 +694,7 @@
         };
 
         let modalFiles = [];
+        let reviewFilesMap = new Map();
 
         function generateId() {
             return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
@@ -710,6 +760,59 @@
                 if (urlData) urls.push(urlData.publicUrl);
             }
             return urls;
+        }
+
+        // Lida com a pré-visualização de arquivos
+        function handleFilePreviews(fileInput, previewsContainer, fileList) {
+            previewsContainer.innerHTML = '';
+            fileList.length = 0; // Limpa a lista de arquivos associada
+
+            const files = Array.from(fileInput.files);
+
+            files.forEach(file => {
+                fileList.push(file);
+
+                const url = URL.createObjectURL(file);
+                const isVideo = file.type.startsWith('video/');
+                const previewItem = document.createElement('div');
+                previewItem.className = 'media-preview-item';
+
+                const mediaElement = isVideo ? document.createElement('video') : document.createElement('img');
+                mediaElement.src = url;
+                if (isVideo) mediaElement.muted = true;
+
+                previewItem.appendChild(mediaElement);
+
+                const removeBtn = document.createElement('span');
+                removeBtn.className = 'media-remove-btn';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation(); // Impede que o lightbox abra ao clicar no 'x'
+                    const index = fileList.indexOf(file);
+                    if (index > -1) fileList.splice(index, 1);
+                    previewItem.remove();
+                    URL.revokeObjectURL(url);
+                };
+                previewItem.appendChild(removeBtn);
+
+                // Adiciona o clique para abrir o lightbox
+                previewItem.onclick = () => openLightbox(url, isVideo);
+
+                previewsContainer.appendChild(previewItem);
+            });
+        }
+
+        // Verifica se uma URL é de um vídeo
+        function isUrlVideo(url) {
+            if (!url) return false;
+            const videoExtensions = ['.mp4', '.mov', '.webm', '.ogg'];
+            return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+        }
+
+        function renderMediaBadge(url) {
+            const isVideo = isUrlVideo(url);
+            const label = isVideo ? '📹 Vídeo' : '📷 Foto';
+            return `<div class="photo-badge" onclick="openLightbox('${escapeHtml(url)}', ${isVideo})">${label}</div>`;
         }
 
         // Carregar profissionais do banco
@@ -872,7 +975,7 @@
                                     <div class="review-stars">${renderSmallStars(av.nota || 5)}</div>
                                 </div>
                                 <div class="review-text">${escapeHtml(av.comentario)}</div>
-                                ${av.fotos && av.fotos.length ? `<div class="photos-list">${av.fotos.map(f => `<a href="${f}" target="_blank" class="photo-badge">📷 Foto</a>`).join('')}</div>` : ''}
+                                ${av.fotos && av.fotos.length ? `<div class="photos-list">${av.fotos.map(renderMediaBadge).join('')}</div>` : ''}
                             </div>
                         `;
                     });
@@ -895,7 +998,7 @@
                     ${prof.fotos_servico && prof.fotos_servico.length ? `
                         <div class="photos-area">
                             <div class="photos-label">📸 Fotos do serviço</div>
-                            <div class="photos-list">${prof.fotos_servico.map(f => `<a href="${f}" target="_blank" class="photo-badge">📷 Foto</a>`).join('')}</div>
+                            <div class="photos-list">${prof.fotos_servico.map(renderMediaBadge).join('')}</div>
                         </div>
                     ` : ''}
                     <div class="reviews-area">
@@ -926,37 +1029,17 @@
                 container.appendChild(card);
                 
                 // Inicializar componentes do card
+                reviewFilesMap.set(prof.id, []);
                 setupStarRating(`starRev_${prof.id}`, 5);
                 
                 // Configurar upload de arquivos
                 const uploadArea = document.getElementById(`uploadAreaRev_${prof.id}`);
                 const fileInput = document.getElementById(`fileRev_${prof.id}`);
                 const previewContainer = document.getElementById(`previewRev_${prof.id}`);
-                let reviewFiles = [];
                 
                 if (uploadArea && fileInput) {
                     uploadArea.onclick = () => fileInput.click();
-                    fileInput.onchange = () => {
-                        previewContainer.innerHTML = '';
-                        reviewFiles = Array.from(fileInput.files);
-                        reviewFiles.forEach(file => {
-                            const url = URL.createObjectURL(file);
-                            const isVideo = file.type.startsWith('video/');
-                            const preview = document.createElement('div');
-                            preview.className = 'media-preview-item';
-                            if (isVideo) {
-                                const video = document.createElement('video');
-                                video.src = url;
-                                video.muted = true;
-                                preview.appendChild(video);
-                            } else {
-                                const img = document.createElement('img');
-                                img.src = url;
-                                preview.appendChild(img);
-                            }
-                            previewContainer.appendChild(preview);
-                        });
-                    };
+                    fileInput.onchange = () => handleFilePreviews(fileInput, previewContainer, reviewFilesMap.get(prof.id));
                 }
                 
                 // Botão de enviar avaliação
@@ -986,9 +1069,9 @@
                         }
                         
                         let fotosUrls = [];
-                        const fileInputElem = document.getElementById(`fileRev_${prof.id}`);
-                        if (fileInputElem && fileInputElem.files.length > 0) {
-                            fotosUrls = await uploadFiles(Array.from(fileInputElem.files), `avaliacoes/${prof.id}`);
+                        const filesToUpload = reviewFilesMap.get(prof.id);
+                        if (filesToUpload && filesToUpload.length > 0) {
+                            fotosUrls = await uploadFiles(filesToUpload, `avaliacoes/${prof.id}`);
                         }
                         
                         const { error } = await supabase.from('avaliacoes').insert({
@@ -1049,27 +1132,7 @@
             
             if (uploadArea && fileInput) {
                 uploadArea.onclick = () => fileInput.click();
-                fileInput.onchange = () => {
-                    previewsContainer.innerHTML = '';
-                    modalFiles = Array.from(fileInput.files);
-                    modalFiles.forEach(file => {
-                        const url = URL.createObjectURL(file);
-                        const isVideo = file.type.startsWith('video/');
-                        const preview = document.createElement('div');
-                        preview.className = 'media-preview-item';
-                        if (isVideo) {
-                            const video = document.createElement('video');
-                            video.src = url;
-                            video.muted = true;
-                            preview.appendChild(video);
-                        } else {
-                            const img = document.createElement('img');
-                            img.src = url;
-                            preview.appendChild(img);
-                        }
-                        previewsContainer.appendChild(preview);
-                    });
-                };
+                fileInput.onchange = () => handleFilePreviews(fileInput, previewsContainer, modalFiles);
             }
             
             const openBtn = document.getElementById('openModalBtn');
@@ -1144,11 +1207,49 @@
             };
         }
 
+        // Funções do Lightbox
+        let lightboxOverlay, lightboxContent;
+
+        function initLightbox() {
+            lightboxOverlay = document.getElementById('lightboxOverlay');
+            lightboxContent = document.getElementById('lightboxContent');
+            const lightboxClose = lightboxOverlay.querySelector('.lightbox-close');
+
+            const closeAction = () => {
+                lightboxOverlay.classList.remove('show');
+                lightboxContent.innerHTML = ''; // Para parar vídeos
+            };
+
+            lightboxOverlay.onclick = (e) => {
+                if (e.target === lightboxOverlay) closeAction();
+            };
+            lightboxClose.onclick = closeAction;
+        }
+
+        function openLightbox(src, isVideo = false) {
+            lightboxContent.innerHTML = '';
+            if (isVideo) {
+                const video = document.createElement('video');
+                video.src = src;
+                video.controls = true;
+                video.autoplay = true;
+                lightboxContent.appendChild(video);
+            } else {
+                const img = document.createElement('img');
+                img.src = src;
+                lightboxContent.appendChild(img);
+            }
+            lightboxOverlay.classList.add('show');
+        }
+
+        window.openLightbox = openLightbox; // Expor globalmente para ser acessível pelo onclick
+
         // Inicializar
         renderizarCategorias();
         atualizarSelectCategorias();
         renderizarCards();
         configurarModal();
+        initLightbox();
     })();
 </script>
 </body>
