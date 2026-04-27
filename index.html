@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>My House | Indicações entre Vizinhos</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -24,7 +25,7 @@
             margin: 0 auto;
         }
 
-        /* CABEÇALHO - RESPONSIVO */
+        /* CABEÇALHO */
         .header-minimal {
             padding: 20px 0 16px;
             display: flex;
@@ -49,7 +50,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            text-decoration: none;
         }
 
         .logo-icon {
@@ -91,7 +91,7 @@
             }
         }
 
-        /* MODAL - RESPONSIVO */
+        /* MODAL */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -199,19 +199,17 @@
             cursor: pointer;
         }
 
-        /* CATEGORIAS - RESPONSIVO */
+        /* CATEGORIAS */
         .categorias-wrapper {
             margin-bottom: 24px;
             overflow-x: auto;
             white-space: nowrap;
             padding-bottom: 8px;
-            -webkit-overflow-scrolling: touch;
         }
 
         .categorias-container {
             display: inline-flex;
             gap: 8px;
-            padding-bottom: 4px;
         }
 
         .categoria-btn {
@@ -243,7 +241,7 @@
             white-space: nowrap;
         }
 
-        /* CARDS - RESPONSIVOS */
+        /* CARDS */
         .profissionais-grid {
             display: flex;
             flex-direction: column;
@@ -274,7 +272,6 @@
             font-size: 1.2rem;
             font-weight: 800;
             color: #1E3A5F;
-            word-break: break-word;
         }
 
         .categoria-tag {
@@ -348,7 +345,12 @@
             padding: 4px 10px;
             border-radius: 20px;
             font-size: 0.65rem;
-            color: #1E3A5F;
+            cursor: pointer;
+        }
+
+        .photo-badge:hover {
+            background: #F97316;
+            color: white;
         }
 
         .reviews-area {
@@ -372,6 +374,20 @@
             color: #1E3A5F;
             margin-bottom: 6px;
             gap: 8px;
+        }
+
+        .review-stars {
+            display: inline-flex;
+            gap: 2px;
+        }
+
+        .review-star {
+            color: #cbd5e1;
+            font-size: 0.7rem;
+        }
+
+        .review-star.filled {
+            color: #F97316;
         }
 
         .review-text {
@@ -438,6 +454,82 @@
         .review-form-text {
             border-radius: 16px;
             margin: 8px 0;
+            resize: vertical;
+        }
+
+        /* ESTRELAS PARA AVALIAÇÃO */
+        .star-rating-input {
+            display: flex;
+            gap: 8px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            margin: 8px 0;
+            justify-content: center;
+        }
+
+        .star-rating-input .star {
+            color: #cbd5e1;
+            transition: color 0.2s;
+        }
+
+        .star-rating-input .star.filled {
+            color: #F97316;
+        }
+
+        /* UPLOAD DE MÍDIA */
+        .media-upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 14px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8fafc;
+            font-size: 0.8rem;
+            color: #5b6e8c;
+            margin-bottom: 8px;
+        }
+
+        .media-upload-area:hover {
+            border-color: #F97316;
+            background-color: #fff7ed;
+        }
+
+        .media-previews {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .media-preview-item {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .media-preview-item img, .media-preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
         }
 
         footer {
@@ -453,107 +545,6 @@
             text-align: center;
             padding: 50px 20px;
             color: #F97316;
-        }
-
-        /* STAR RATING INPUT */
-        .star-rating-input {
-            display: flex;
-            gap: 4px;
-            font-size: 1.8rem;
-            cursor: pointer;
-            color: #cbd5e1;
-            margin-bottom: 8px;
-        }
-
-        .star-rating-input .star-input {
-            transition: color 0.2s;
-        }
-
-        .star-rating-input .star-input:hover,
-        .star-rating-input .star-input.hover {
-            color: #fca5a5; /* a lighter orange for hover */
-        }
-
-        .star-rating-input .star-input.filled {
-            color: #F97316;
-        }
-
-        /* MEDIA UPLOAD */
-        .media-upload-area {
-            border: 2px dashed #cbd5e1;
-            border-radius: 14px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            background-color: #f8fafc;
-            color: #5b6e8c;
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-        }
-        .media-upload-area:hover {
-            border-color: #F97316;
-            background-color: #fff7ed;
-        }
-        .media-upload-area input[type="file"] {
-            display: none;
-        }
-        .media-previews {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .media-preview-item {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-        .media-preview-item img, .media-preview-item video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .media-remove-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 20px;
-            height: 20px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            line-height: 20px;
-        }
-
-        .btn-whatsapp {
-            background: #25D366;
-            border: none;
-            border-radius: 30px;
-            padding: 10px 20px;
-            color: white;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: 0.2s;
-            justify-content: center;
-            text-decoration: none;
-        }
-
-        .btn-whatsapp:hover {
-            background: #1da851;
-            transform: scale(0.98);
         }
     </style>
 </head>
@@ -578,7 +569,7 @@
     <footer>My House • indicações entre vizinhos • dados salvos na nuvem</footer>
 </div>
 
-<!-- MODAL -->
+<!-- MODAL NOVA INDICAÇÃO -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
         <span class="close-modal" id="closeModalBtn">&times;</span>
@@ -611,9 +602,7 @@
         </div>
         <div class="form-group">
             <label>Sua nota *</label>
-            <div id="modalStarRating" class="star-rating-input" data-rating="0">
-                <!-- Stars will be generated by JS -->
-            </div>
+            <div id="modalStarRating" class="star-rating-input" data-rating="5"></div>
         </div>
         <div class="form-group">
             <label>Sua avaliação * (mín. 20 caracteres)</label>
@@ -622,8 +611,8 @@
         <div class="form-group">
             <label>Fotos e Vídeos (opcional)</label>
             <div id="modalMediaUpload" class="media-upload-area">
-                <span>Clique para adicionar fotos ou vídeos</span>
-                <input type="file" id="modalFileInput" multiple accept="image/*,video/*">
+                📸 Clique para adicionar fotos ou vídeos
+                <input type="file" id="modalFileInput" multiple accept="image/*,video/*" style="display:none">
             </div>
             <div id="modalMediaPreviews" class="media-previews"></div>
         </div>
@@ -634,55 +623,15 @@
 <script>
     (function() {
         // ============================================
-        // 🔧 CONFIGURE AQUI - SUBSTITUA PELOS SEUS DADOS
+        // CONFIGURAÇÕES DO SUPABASE
         // ============================================
-        const SUPABASE_URL = "https://kjbbthydceoqqppxhpwb.supabase.co/";
+        const SUPABASE_URL = "https://kjbbthydceoqqppxhpwb.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_ln29EqiHlLAnoFzQwGFPmQ_UfDK4-Wq";
-        const SITE_URL = "https://my-house-gray.vercel.app"; // URL do site para compartilhamento
+        const BUCKET_NAME = "my-house-media";
         // ============================================
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        const MAX_IMAGE_SIZE_MB = 5;
-        const MAX_VIDEO_SIZE_MB = 10;
-        const MIN_REVIEW_LENGTH = 20;
-
-        // State for file uploads
-        let modalFiles = [];
-        let reviewFiles = new Map(); // Map<professionalId, File[]>
-
-        let supabaseClient = null;
-        
-        // Inicializa Supabase
-        function initSupabase() {
-            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log("Supabase inicializado com sucesso!");
-                return true;
-            } else {
-                console.log("Aguardando carregamento do Supabase...");
-                return false;
-            }
-        }
-
-        // Carrega o script do Supabase se necessário
-        if (typeof window.supabase === 'undefined') {
-            const script = document.createElement('script');
-            script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-            script.onload = () => {
-                if (initSupabase()) {
-                    carregarTudo();
-                }
-            };
-            script.onerror = () => {
-                console.error("Erro ao carregar Supabase");
-                document.getElementById('listaProfissionais').innerHTML = '<div class="loading">❌ Erro ao carregar. Verifique sua conexão.</div>';
-            };
-            document.head.appendChild(script);
-        } else {
-            if (initSupabase()) {
-                carregarTudo();
-            }
-        }
-
         let categoriaAtiva = "todos";
         let categoriasSet = new Set(["moveis", "eletricistas", "ar-condicionado", "marmores", "obras", "gesso", "outros"]);
         const categoriaDisplay = {
@@ -695,137 +644,86 @@
             outros: "Outros"
         };
 
-        // ❗ IMPORTANTE: Crie um bucket público no Supabase Storage chamado 'my-house-media' para que os uploads funcionem.
-        async function uploadMedia(files, professionalId) {
-            if (!files || files.length === 0) return [];
+        let modalFiles = [];
 
-            const uploadedUrls = [];
-            for (const file of files) {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                const filePath = `${professionalId}/${fileName}`;
-
-                const { error } = await supabaseClient.storage
-                    .from('my-house-media') // Assumes a public bucket named 'my-house-media'
-                    .upload(filePath, file);
-
-                if (error) {
-                    console.error('Erro no upload:', error);
-                    alert(`Falha ao enviar o arquivo ${file.name}.`);
-                    // Continue to next file or stop? For now, continue.
-                } else {
-                    const { data } = supabaseClient.storage
-                        .from('my-house-media')
-                        .getPublicUrl(filePath);
-                    
-                    if (data && data.publicUrl) {
-                        uploadedUrls.push(data.publicUrl);
-                    }
-                }
-            }
-            return uploadedUrls;
+        function generateId() {
+            return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         }
 
-        function createStarRating(container) {
+        // Configurar estrelas clicáveis
+        function setupStarRating(containerId, initialRating = 5) {
+            const container = document.getElementById(containerId);
             if (!container) return;
+            
             container.innerHTML = '';
             for (let i = 1; i <= 5; i++) {
                 const star = document.createElement('span');
-                star.className = 'star-input';
+                star.className = 'star';
                 star.textContent = '★';
                 star.dataset.value = i;
+                star.onclick = () => {
+                    const rating = parseInt(star.dataset.value);
+                    container.dataset.rating = rating;
+                    const stars = container.querySelectorAll('.star');
+                    stars.forEach(s => {
+                        if (parseInt(s.dataset.value) <= rating) {
+                            s.classList.add('filled');
+                        } else {
+                            s.classList.remove('filled');
+                        }
+                    });
+                };
                 container.appendChild(star);
             }
-
-            const stars = container.querySelectorAll('.star-input');
             
-            container.addEventListener('mouseover', e => {
-                if (e.target.classList.contains('star-input')) {
-                    const hoverValue = parseInt(e.target.dataset.value);
-                    stars.forEach(s => {
-                        s.classList.toggle('hover', parseInt(s.dataset.value) <= hoverValue);
-                    });
+            const stars = container.querySelectorAll('.star');
+            stars.forEach(s => {
+                if (parseInt(s.dataset.value) <= initialRating) {
+                    s.classList.add('filled');
                 }
             });
-
-            container.addEventListener('mouseout', () => {
-                stars.forEach(s => s.classList.remove('hover'));
-            });
-
-            container.addEventListener('click', e => {
-                if (e.target.classList.contains('star-input')) {
-                    const clickValue = parseInt(e.target.dataset.value);
-                    container.dataset.rating = clickValue;
-                    stars.forEach(s => {
-                        s.classList.toggle('filled', parseInt(s.dataset.value) <= clickValue);
-                    });
-                }
-            });
+            container.dataset.rating = initialRating;
         }
 
-        function handleFileSelect(input, previewsContainer, fileList) {
-            previewsContainer.innerHTML = ''; // Clear previous previews
-            fileList.length = 0; // Clear the file array
-
-            const files = Array.from(input.files);
-
+        // Upload de arquivos para o Storage
+        async function uploadFiles(files, folder) {
+            if (!files || files.length === 0) return [];
+            
+            const urls = [];
             for (const file of files) {
-                const isImage = file.type.startsWith('image/');
-                const isVideo = file.type.startsWith('video/');
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substr(2, 6)}.${fileExt}`;
                 
-                if (!isImage && !isVideo) continue;
-
-                if (isImage && file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-                    alert(`A imagem ${file.name} excede o limite de ${MAX_IMAGE_SIZE_MB}MB.`);
+                const { error } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .upload(fileName, file);
+                
+                if (error) {
+                    console.error("Upload error:", error);
                     continue;
                 }
-
-                if (isVideo && file.size > MAX_VIDEO_SIZE_MB * 1024 * 1024) {
-                    alert(`O vídeo ${file.name} excede o limite de ${MAX_VIDEO_SIZE_MB}MB.`);
-                    continue;
-                }
-
-                fileList.push(file);
-
-                const previewItem = document.createElement('div');
-                previewItem.className = 'media-preview-item';
-
-                const fileUrl = URL.createObjectURL(file);
-                const mediaElement = isImage ? document.createElement('img') : document.createElement('video');
-                mediaElement.src = fileUrl;
-                if (!isImage) mediaElement.muted = true;
                 
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'media-remove-btn';
-                removeBtn.innerHTML = '&times;';
-                removeBtn.onclick = () => {
-                    previewItem.remove();
-                    const index = fileList.indexOf(file);
-                    if (index > -1) fileList.splice(index, 1);
-                    URL.revokeObjectURL(fileUrl);
-                };
-
-                previewItem.appendChild(mediaElement);
-                previewItem.appendChild(removeBtn);
-                previewsContainer.appendChild(previewItem);
+                const { data: urlData } = supabase.storage
+                    .from(BUCKET_NAME)
+                    .getPublicUrl(fileName);
+                
+                if (urlData) urls.push(urlData.publicUrl);
             }
+            return urls;
         }
 
+        // Carregar profissionais do banco
         async function carregarProfissionais() {
-            if (!supabaseClient) return [];
             try {
-                const { data: profs, error } = await supabaseClient
+                const { data: profs, error } = await supabase
                     .from('profissionais')
                     .select('*')
                     .order('created_at', { ascending: false });
                     
-                if (error) {
-                    console.error("Erro ao carregar profissionais:", error);
-                    return [];
-                }
+                if (error) throw error;
                 
                 for (let p of profs || []) {
-                    const { data: avals } = await supabaseClient
+                    const { data: avals } = await supabase
                         .from('avaliacoes')
                         .select('*')
                         .eq('profissional_id', p.id)
@@ -835,30 +733,54 @@
                 }
                 return profs || [];
             } catch (e) {
-                console.error("Erro na conexão:", e);
+                console.error(e);
                 return [];
             }
         }
 
+        // Calcular média de estrelas
+        function calcularMedia(prof) {
+            let soma = prof.nota_principal || 5;
+            let count = 1;
+            
+            if (prof.avaliacoes && prof.avaliacoes.length) {
+                prof.avaliacoes.forEach(av => {
+                    if (av.nota) {
+                        soma += av.nota;
+                        count++;
+                    }
+                });
+            }
+            return (soma / count).toFixed(1);
+        }
+
+        // Renderizar estrelas
+        function renderStars(rating) {
+            const filled = Math.floor(rating);
+            return Array(5).fill().map((_, i) => 
+                `<span class="star ${i < filled ? 'filled' : ''}">★</span>`
+            ).join('');
+        }
+
+        function renderSmallStars(rating) {
+            const filled = Math.floor(rating);
+            return Array(5).fill().map((_, i) => 
+                `<span class="review-star ${i < filled ? 'filled' : ''}">★</span>`
+            ).join('');
+        }
+
+        // Renderizar categorias
         function renderizarCategorias() {
             const container = document.getElementById('categoriasContainer');
             if (!container) return;
-            container.innerHTML = ''; // Limpa para reconstruir de forma consistente
-
-            const allCats = ['todos', ...Array.from(categoriasSet).sort()];
-
-            for (const cat of allCats) {
+            container.innerHTML = `<button class="categoria-btn active" data-cat="todos">📋 Todos</button>`;
+            
+            const sorted = Array.from(categoriasSet).sort();
+            for (let cat of sorted) {
                 const btn = document.createElement('button');
                 btn.className = 'categoria-btn';
                 btn.setAttribute('data-cat', cat);
-                btn.innerText = cat === 'todos' 
-                    ? '📋 Todos' 
-                    : categoriaDisplay[cat] || cat.charAt(0).toUpperCase() + cat.slice(1);
-
-                if (cat === categoriaAtiva) {
-                    btn.classList.add('active');
-                }
-
+                btn.innerText = categoriaDisplay[cat] || cat;
                 btn.onclick = () => {
                     document.querySelectorAll('.categoria-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
@@ -867,7 +789,7 @@
                 };
                 container.appendChild(btn);
             }
-
+            
             const addBtn = document.createElement('button');
             addBtn.className = 'add-cat-btn';
             addBtn.innerText = '+ Nova categoria';
@@ -896,92 +818,47 @@
             }
         }
 
-        function calcularMediaEstrelas(prof) {
-            if (!prof) return { media: 0, count: 0 };
-            
-            let soma = 0;
-            let count = 0;
-
-            // Consider the main review's rating
-            if (prof.nota_principal && prof.nota_principal > 0) {
-                soma += prof.nota_principal;
-                count++;
-            }
-
-            // Add ratings from other reviews
-            if (prof.avaliacoes && prof.avaliacoes.length > 0) {
-                for (const av of prof.avaliacoes) {
-                    if (av.nota && av.nota > 0) {
-                        soma += av.nota;
-                        count++;
-                    }
-                }
-            }
-
-            if (count === 0) {
-                return { media: 0, count: 0 };
-            }
-
-            const media = (soma / count).toFixed(1);
-            return { media, count };
-        }
-
-        function gerarTextoWhatsAppCompartilhamento(prof, nomeAvaliador, apAvaliador, comentario, nota) {
-            const texto = `Olá vizinhos! 🏠
-
-*INDICAÇÃO DE PROFISSIONAL - MY HOUSE*
-
-📌 *Profissional:* ${prof.nome}
-📞 *Contato:* ${prof.telefone}
-⭐ *Minha nota:* ${nota} ${nota === 1 ? 'estrela' : 'estrelas'}
-
-*MINHA EXPERIÊNCIA:*
-"${comentario}"
-
-*Compartilhado por:* ${nomeAvaliador} (AP ${apAvaliador})
-
-🔗 *Veja mais em:* ${SITE_URL}
-
----
-Enviado via My House - Indicações entre vizinhos 🏡`;
-            return texto;
-        }
-
+        // Renderizar cards de profissionais
         async function renderizarCards() {
             const container = document.getElementById('listaProfissionais');
-            if (!container) return;
-            container.innerHTML = '<div class="loading">🔄 Carregando indicações...</div>';
+            container.innerHTML = '<div class="loading">🔄 Carregando...</div>';
             
             const profissionais = await carregarProfissionais();
-            
-            // Após carregar, o `categoriasSet` pode ter novos itens.
-            // Verificamos se o número de botões de categoria renderizados corresponde ao tamanho do Set.
-            // Isso corrige o bug de uma nova categoria não aparecer na barra superior.
-            const renderedCatButtons = document.querySelectorAll('#categoriasContainer .categoria-btn');
-            if (renderedCatButtons.length !== categoriasSet.size + 1) { // +1 para o botão "Todos"
-                renderizarCategorias();
-                atualizarSelectCategorias();
-            }
-            
             let filtrados = categoriaAtiva === 'todos' ? profissionais : profissionais.filter(p => p.categoria === categoriaAtiva);
             
             if (filtrados.length === 0) {
-                container.innerHTML = `<div style="background:#fff; border-radius:24px; padding:40px 20px; text-align:center; color:#1E3A5F;">🏠 Nenhum profissional nesta categoria.<br>Seja o primeiro a indicar!</div>`;
+                container.innerHTML = `<div style="text-align:center; padding:40px;">🏠 Nenhum profissional encontrado</div>`;
                 return;
             }
             
             container.innerHTML = '';
             for (let prof of filtrados) {
-                const { media, count } = calcularMediaEstrelas(prof);
-                const estrelasInt = Math.round(media);
-                const estrelasHtml = Array(5).fill().map((_, i) => `<span class="star ${i < estrelasInt ? 'filled' : ''}">★</span>`).join('');
+                const media = calcularMedia(prof);
                 
-                const generateRatingStars = (rating) => {
-                    if (!rating || rating <= 0) return '';
-                    const filled = '★'.repeat(rating);
-                    const empty = '☆'.repeat(5 - rating);
-                    return `<span style="color: #F97316;">${filled}</span><span style="color: #cbd5e1;">${empty}</span>`;
-                };
+                let avaliacoesHtml = `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span><strong>${escapeHtml(prof.indicado_por)}</strong> (AP ${escapeHtml(prof.ap_indicador)})</span>
+                            <div class="review-stars">${renderSmallStars(prof.nota_principal || 5)}</div>
+                        </div>
+                        <div class="review-text">${escapeHtml(prof.avaliacao_principal)}</div>
+                    </div>
+                `;
+                
+                if (prof.avaliacoes && prof.avaliacoes.length) {
+                    prof.avaliacoes.forEach(av => {
+                        avaliacoesHtml += `
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <span>👤 ${escapeHtml(av.nome)} (AP ${escapeHtml(av.ap)})</span>
+                                    <div class="review-stars">${renderSmallStars(av.nota || 5)}</div>
+                                </div>
+                                <div class="review-text">${escapeHtml(av.comentario)}</div>
+                                ${av.fotos && av.fotos.length ? `<div class="photos-list">${av.fotos.map(f => `<a href="${f}" target="_blank" class="photo-badge">📷 Foto</a>`).join('')}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                }
                 
                 const card = document.createElement('div');
                 card.className = 'card';
@@ -991,415 +868,49 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                             <span class="prof-name">${escapeHtml(prof.nome)}</span>
                             <span class="categoria-tag">${categoriaDisplay[prof.categoria] || prof.categoria}</span>
                         </div>
-                        <div class="rating-stars">${estrelasHtml}<span class="rating-value">(${media} de ${count} ${count === 1 ? 'avaliação' : 'avaliações'})</span></div>
+                        <div class="rating-stars">${renderStars(media)}<span class="rating-value">(${media})</span></div>
                         <div class="contact-info">
                             <span>📞 ${escapeHtml(prof.telefone)}</span>
                             ${prof.endereco ? `<span>📍 ${escapeHtml(prof.endereco)}</span>` : ''}
                         </div>
                     </div>
-                    ${(prof.fotos_servico && prof.fotos_servico.length) ? `
+                    ${prof.fotos_servico && prof.fotos_servico.length ? `
                         <div class="photos-area">
-                            <div class="photos-label">📸 Mídia do serviço</div>
-                            <div class="photos-list">${prof.fotos_servico.map(url => {
-                                const isVideo = ['.mp4', '.mov', '.webm'].some(ext => url.toLowerCase().includes(ext));
-                                return isVideo 
-                                    ? `<a href="${url}" target="_blank" class="photo-badge">📹 Vídeo</a>`
-                                    : `<a href="${url}" target="_blank" class="photo-badge">📷 Foto</a>`;
-                            }).join('')}</div>
+                            <div class="photos-label">📸 Fotos do serviço</div>
+                            <div class="photos-list">${prof.fotos_servico.map(f => `<a href="${f}" target="_blank" class="photo-badge">📷 Foto</a>`).join('')}</div>
                         </div>
                     ` : ''}
                     <div class="reviews-area">
-                        <div style="font-weight:600; margin-bottom:10px; font-size:0.75rem; color:#1E3A5F;">🗣️ Avaliações</div>
-                        <div class="review-item">
-                            <div class="review-header">
-                                <span><strong>${escapeHtml(prof.indicado_por)}</strong> (AP ${escapeHtml(prof.ap_indicador)})</span>
-                                <span>${generateRatingStars(prof.nota_principal)}</span>
-                            </div>
-                            <div class="review-text">${escapeHtml(prof.avaliacao_principal)}</div>
-                        </div>
-                        ${(prof.avaliacoes || []).map(av => `
-                            <div class="review-item">
-                                <div class="review-header">
-                                    <span>👤 ${escapeHtml(av.nome)} (AP ${escapeHtml(av.ap)})</span>
-                                    <span>${generateRatingStars(av.nota)}</span>
-                                </div>
-                                <div class="review-text">${escapeHtml(av.comentario)}</div>
-                                ${(av.fotos && av.fotos.length) ? `<div class="photos-list" style="margin-top:8px;">${av.fotos.map(url => {
-                                    const isVideo = ['.mp4', '.mov', '.webm'].some(ext => url.toLowerCase().includes(ext));
-                                    return isVideo 
-                                        ? `<a href="${url}" target="_blank" class="photo-badge">📹 Vídeo</a>`
-                                        : `<a href="${url}" target="_blank" class="photo-badge">📷 Foto</a>`;
-                                }).join('')}</div>` : ''}
-                            </div>
-                        `).join('')}
-                        <button class="btn-add-review" data-id="${prof.id}">+ Adicionar avaliação</button>
+                        <div style="font-weight:600; margin-bottom:10px;">🗣️ Avaliações</div>
+                        ${avaliacoesHtml}
+                        <button class="btn-add-review" data-id="${prof.id}">⭐ Avaliar este profissional</button>
                         <div id="rev-${prof.id}" class="inline-review-form">
-                            <div class="form-group" style="margin-bottom: 8px;">
-                                <label style="margin-bottom: 4px;">Sua nota *</label>
-                                <div id="starRev_${prof.id}" class="star-rating-input" data-rating="0"></div>
+                            <div style="text-align:center; margin-bottom:10px;">
+                                <div class="star-rating-input" id="starRev_${prof.id}" data-rating="5"></div>
                             </div>
                             <div class="review-input-row">
                                 <input type="text" id="nomeRev_${prof.id}" placeholder="Seu nome *">
                                 <input type="text" id="apRev_${prof.id}" placeholder="Seu AP *">
                             </div>
-                            <textarea id="comentRev_${prof.id}" class="review-form-text" rows="2" placeholder="Sua avaliação * (mín. 20 caracteres)"></textarea>
-                            
-                            <div class="form-group">
-                                <div id="mediaUploadRev_${prof.id}" class="media-upload-area" style="padding: 10px; font-size: 0.8rem;">
-                                    <span>+ Adicionar fotos/vídeos</span>
-                                    <input type="file" id="fileInputRev_${prof.id}" multiple accept="image/*,video/*">
-                                </div>
-                                <div id="mediaPreviewsRev_${prof.id}" class="media-previews"></div>
+                            <textarea id="comentRev_${prof.id}" class="review-form-text" rows="3" placeholder="Sua avaliação * (mín. 20 caracteres)"></textarea>
+                            <div class="media-upload-area" id="uploadAreaRev_${prof.id}">
+                                📸 Adicionar foto/vídeo
+                                <input type="file" id="fileRev_${prof.id}" accept="image/*,video/*" style="display:none" multiple>
                             </div>
-
-                            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
-                                <button class="btn-cancel-review" data-id="${prof.id}" style="background:transparent; border:1px solid #cbd5e1; border-radius:30px; padding:6px 12px;">Cancelar</button>
-                                <button class="btn-submit-review" data-id="${prof.id}" style="background:#F97316; border:none; border-radius:30px; padding:6px 16px; color:white;">Enviar</button>
+                            <div id="previewRev_${prof.id}" class="media-previews"></div>
+                            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+                                <button class="btn-cancel-review" data-id="${prof.id}">Cancelar</button>
+                                <button class="btn-submit-review" data-id="${prof.id}" style="background:#F97316; color:white; border:none; padding:8px 20px; border-radius:30px;">Enviar</button>
                             </div>
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
-
-                // Initialize interactive elements for the new card
-                createStarRating(document.getElementById(`starRev_${prof.id}`));
                 
-                const mediaUploadArea = document.getElementById(`mediaUploadRev_${prof.id}`);
-                const fileInput = document.getElementById(`fileInputRev_${prof.id}`);
-                const previewsContainer = document.getElementById(`mediaPreviewsRev_${prof.id}`);
-                
-                reviewFiles.set(prof.id, []); // Initialize file list for this review form
-
-                if(mediaUploadArea) mediaUploadArea.onclick = () => fileInput.click();
-                if(fileInput) fileInput.onchange = () => handleFileSelect(fileInput, previewsContainer, reviewFiles.get(prof.id));
-            }
-            
-            // Eventos
-            document.querySelectorAll('.btn-add-review').forEach(btn => {
-                btn.onclick = () => {
-                    const id = btn.getAttribute('data-id');
-                    document.querySelectorAll('.inline-review-form').forEach(f => f.classList.remove('show'));
-                    const form = document.getElementById(`rev-${id}`);
-                    if (form) form.classList.add('show');
-                };
-            });
-            
-            document.querySelectorAll('.btn-submit-review').forEach(btn => {
-                btn.onclick = async () => {
-                    const id = btn.getAttribute('data-id');
-                    btn.disabled = true;
-                    btn.innerText = 'Enviando...';
-
-                    const rating = parseInt(document.getElementById(`starRev_${id}`)?.dataset.rating || '0');
-                    const nome = document.getElementById(`nomeRev_${id}`)?.value.trim();
-                    const ap = document.getElementById(`apRev_${id}`)?.value.trim();
-                    const coment = document.getElementById(`comentRev_${id}`)?.value.trim();
-                    
-                    if (!nome || !ap || !coment || rating === 0) {
-                        alert("Preencha nome, AP, avaliação e dê uma nota (estrelas).");
-                        btn.disabled = false;
-                        btn.innerText = 'Enviar';
-                        return;
-                    }
-
-                    if (coment.length < MIN_REVIEW_LENGTH) {
-                        alert(`Sua avaliação deve ter no mínimo ${MIN_REVIEW_LENGTH} caracteres.`);
-                        btn.disabled = false;
-                        btn.innerText = 'Enviar';
-                        return;
-                    }
-                    
-                    const filesToUpload = reviewFiles.get(id) || [];
-                    const mediaUrls = await uploadMedia(filesToUpload, id);
-
-                    const { error } = await supabaseClient.from('avaliacoes').insert({
-                        profissional_id: id,
-                        nome, 
-                        ap,
-                        comentario: coment,
-                        nota: rating,
-                        fotos: mediaUrls
-                    });
-                    
-                    if (error) {
-                        alert("Erro: " + error.message);
-                        btn.disabled = false;
-                        btn.innerText = 'Enviar';
-                    } else {
-                        // Find the professional object to use its data in the WhatsApp message
-                        const prof = filtrados.find(p => p.id == id);
-
-                        // Hide the "add review" button for this card to prevent re-submission
-                        const addReviewBtn = document.querySelector(`.btn-add-review[data-id="${id}"]`);
-                        if (addReviewBtn) addReviewBtn.style.display = 'none';
-
-                        // Replace form with success message and WhatsApp button
-                        const formDiv = document.getElementById(`rev-${id}`);
-                        if (formDiv && prof) {
-                            const whatsappMessage = gerarTextoWhatsAppCompartilhamento(prof, nome, ap, coment, rating);
-                            
-                            formDiv.style.padding = '0'; // Remove padding from the container
-                            formDiv.innerHTML = `
-                                <div style="text-align:center; padding:20px; border: 1px solid #e2e8f0; border-radius: 18px; background-color: #f8fafc;">
-                                    <div style="font-size:1.1rem; margin-bottom:10px; color: #1E3A5F; font-weight: 600;">✅ Avaliação enviada!</div>
-                                    <div style="margin-bottom:20px; color:#5b6e8c; font-size: 0.85rem;">Obrigado por compartilhar sua experiência. Que tal enviar para os vizinhos?</div>
-                                    <button class="btn-whatsapp" id="whatsapp-btn-${id}">
-                                        💬 Compartilhar no WhatsApp
-                                    </button>
-                                </div>
-                            `;
-                            
-                            document.getElementById(`whatsapp-btn-${id}`).onclick = () => {
-                                const textoCodificado = encodeURIComponent(whatsappMessage);
-                                window.open(`https://wa.me/?text=${textoCodificado}`, '_blank');
-                            };
-                        } else {
-                            // Fallback if something goes wrong
-                            alert("✅ Avaliação enviada!");
-                            renderizarCards();
-                        }
-                    }
-                };
-            });
-            
-            document.querySelectorAll('.btn-cancel-review').forEach(btn => {
-                btn.onclick = () => {
-                    const id = btn.getAttribute('data-id');
-                    document.getElementById(`rev-${id}`)?.classList.remove('show');
-                };
-            });
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-
-        // Configurar eventos do modal
-        function configurarModal() {
-            const openBtn = document.getElementById('openModalBtn');
-            const modal = document.getElementById('modalOverlay');
-            const closeBtn = document.getElementById('closeModalBtn');
-            
-            if (openBtn) openBtn.onclick = () => modal.classList.add('active');
-            if (closeBtn) closeBtn.onclick = () => modal.classList.remove('active');
-            if (modal) modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
-
-            // Initialize interactive elements in the modal
-            createStarRating(document.getElementById('modalStarRating'));
-
-            const mediaUploadArea = document.getElementById('modalMediaUpload');
-            const fileInput = document.getElementById('modalFileInput');
-            const previewsContainer = document.getElementById('modalMediaPreviews');
-
-            mediaUploadArea.onclick = () => fileInput.click();
-            fileInput.onchange = () => handleFileSelect(fileInput, previewsContainer, modalFiles);
-            
-            const submitBtn = document.getElementById('submitProfissional');
-            if (submitBtn) {
-                submitBtn.onclick = async () => {
-                    submitBtn.disabled = true;
-                    submitBtn.innerText = 'Cadastrando...';
-
-                    const nome = document.getElementById('modalNome').value.trim();
-                    const categoria = document.getElementById('modalCategoria').value;
-                    const telefone = document.getElementById('modalTelefone').value.trim();
-                    const endereco = document.getElementById('modalEndereco').value.trim();
-                    const indicador = document.getElementById('modalIndicador').value.trim();
-                    const ap = document.getElementById('modalAp').value.trim();
-                    const avaliacao = document.getElementById('modalAvaliacao').value.trim();
-                    const rating = parseInt(document.getElementById('modalStarRating').dataset.rating || '0');
-                    
-                    if (!nome || !telefone || !indicador || !ap || !avaliacao || rating === 0) {
-                        alert("Preencha todos os campos obrigatórios, incluindo a nota (estrelas).");
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Cadastrar profissional';
-                        return;
-                    }
-
-                    if (avaliacao.length < MIN_REVIEW_LENGTH) {
-                        alert(`Sua avaliação deve ter no mínimo ${MIN_REVIEW_LENGTH} caracteres.`);
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Cadastrar profissional';
-                        return;
-                    }
-                    
-                    const tempId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-                    const mediaUrls = await uploadMedia(modalFiles, tempId);
-                    
-                    const { error } = await supabaseClient.from('profissionais').insert({
-                        nome, categoria, telefone, endereco,
-                        indicado_por: indicador,
-                        ap_indicador: ap,
-                        avaliacao_principal: avaliacao,
-                        nota_principal: rating,
-                        fotos_servico: mediaUrls
-                    });
-                    
-                    if (error) {
-                        alert("Erro ao cadastrar: " + error.message);
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Cadastrar profissional';
-                    } else {
-                        alert("✅ Profissional cadastrado!");
-                        modal.classList.remove('active');
-                        
-                        // Reset form
-                        document.getElementById('modalNome').value = '';
-                        document.getElementById('modalTelefone').value = '';
-                        document.getElementById('modalEndereco').value = '';
-                        document.getElementById('modalIndicador').value = '';
-                        document.getElementById('modalAp').value = '';
-                        document.getElementById('modalAvaliacao').value = '';
-                        document.getElementById('modalStarRating').dataset.rating = '0';
-                        document.querySelectorAll('#modalStarRating .star-input').forEach(s => s.classList.remove('filled'));
-                        previewsContainer.innerHTML = '';
-                        modalFiles.length = 0;
-
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Cadastrar profissional';
-
-                        renderizarCards();
-                    }
-                };
-            }
-        }
-
-        function carregarTudo() {
-            renderizarCategorias();
-            atualizarSelectCategorias();
-            renderizarCards();
-            configurarModal();
-        }
-    })();
-</script>
-</body>
-</html>                         return isVideo 
-                                    ? `<a href="${url}" target="_blank" class="photo-badge">📹 Vídeo</a>`
-                                    : `<a href="${url}" target="_blank" class="photo-badge">📷 Foto</a>`;
-                            }).join('')}</div>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="reviews-section">
-                        <div class="reviews-header" data-id="${prof.id}">
-                            <span class="reviews-title">⭐ Avaliação de ${escapeHtml(prof.indicado_por)} (AP ${escapeHtml(prof.ap_indicador)})</span>
-                            <span class="reviews-toggle">▼</span>
-                    <div class="reviews-area">
-                        <div style="font-weight:600; margin-bottom:10px; font-size:0.75rem; color:#1E3A5F;">🗣️ Avaliações</div>
-                        <div class="review-item">
-                            <div class="review-header">
-                                <span><strong>${escapeHtml(prof.indicado_por)}</strong> (AP ${escapeHtml(prof.ap_indicador)})</span>
-                                <span>${generateRatingStars(prof.nota_principal)}</span>
-                            </div>
-                            <div class="review-text">${escapeHtml(prof.avaliacao_principal)}</div>
-                        </div>
-                        <div class="reviews-content" id="reviews-content-${prof.id}">
-                        ${(prof.avaliacoes || []).map(av => `
-                            <div class="review-item">
-                                <div class="review-header">
-                                    <span><strong>${escapeHtml(prof.indicado_por)}</strong> (AP ${escapeHtml(prof.ap_indicador)})</span>
-                                    <div class="review-stars">${renderSmallStars(prof.nota_principal || 5)}</div>
-                                    <span>👤 ${escapeHtml(av.nome)} (AP ${escapeHtml(av.ap)})</span>
-                                    <span>${generateRatingStars(av.nota)}</span>
-                                </div>
-                                <div class="review-text">${escapeHtml(prof.avaliacao_principal)}</div>
-                                <div class="review-text">${escapeHtml(av.comentario)}</div>
-                                ${(av.fotos && av.fotos.length) ? `<div class="photos-list" style="margin-top:8px;">${av.fotos.map(url => {
-                                    const isVideo = ['.mp4', '.mov', '.webm'].some(ext => url.toLowerCase().includes(ext));
-                                    return isVideo 
-                                        ? `<a href="${url}" target="_blank" class="photo-badge">📹 Vídeo</a>`
-                                        : `<a href="${url}" target="_blank" class="photo-badge">📷 Foto</a>`;
-                                }).join('')}</div>` : ''}
-                            </div>
-                            <div style="margin-top: 12px; font-weight: 500; font-size: 0.7rem; color:#1E3A5F;">🗣️ Outras avaliações dos vizinhos</div>
-                            ${avaliacoesHtml}
-                        `).join('')}
-                        <button class="btn-add-review" data-id="${prof.id}">+ Adicionar avaliação</button>
-                        <div id="rev-${prof.id}" class="inline-review-form">
-                            <div class="form-group" style="margin-bottom: 8px;">
-                                <label style="margin-bottom: 4px;">Sua nota *</label>
-                                <div id="starRev_${prof.id}" class="star-rating-input" data-rating="0"></div>
-                            </div>
-                            <div class="review-input-row">
-                                <input type="text" id="nomeRev_${prof.id}" placeholder="Seu nome *">
-                                <input type="text" id="apRev_${prof.id}" placeholder="Seu AP *">
-                            </div>
-                            <textarea id="comentRev_${prof.id}" class="review-form-text" rows="2" placeholder="Sua avaliação * (mín. 20 caracteres)"></textarea>
-                            
-                            <div class="form-group">
-                                <div id="mediaUploadRev_${prof.id}" class="media-upload-area" style="padding: 10px; font-size: 0.8rem;">
-                                    <span>+ Adicionar fotos/vídeos</span>
-                                    <input type="file" id="fileInputRev_${prof.id}" multiple accept="image/*,video/*">
-                                </div>
-                                <div id="mediaPreviewsRev_${prof.id}" class="media-previews"></div>
-                            </div>
-
-                            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
-                                <button class="btn-cancel-review" data-id="${prof.id}" style="background:transparent; border:1px solid #cbd5e1; border-radius:30px; padding:6px 12px;">Cancelar</button>
-                                <button class="btn-submit-review" data-id="${prof.id}" style="background:#F97316; border:none; border-radius:30px; padding:6px 16px; color:white;">Enviar</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button class="btn-add-review" data-id="${prof.id}">⭐ Avaliar este profissional</button>
-                    <div id="rev-${prof.id}" class="inline-review-form">
-                        <div style="text-align:center; margin-bottom:8px;">
-                            <div class="star-rating-input" id="starRev_${prof.id}" data-rating="5"></div>
-                        </div>
-                        <div class="review-input-row">
-                            <input type="text" id="nomeRev_${prof.id}" placeholder="Seu nome *">
-                            <input type="text" id="apRev_${prof.id}" placeholder="Seu AP *">
-                        </div>
-                        <textarea id="comentRev_${prof.id}" class="review-form-text" rows="3" placeholder="Sua avaliação * (mín. 20 caracteres)"></textarea>
-                        <div class="media-upload-area" id="uploadAreaRev_${prof.id}">
-                            📸 Adicionar foto/vídeo
-                            <input type="file" id="fileRev_${prof.id}" accept="image/*,video/*" style="display:none" multiple>
-                        </div>
-                        <div id="previewRev_${prof.id}" class="media-previews"></div>
-                        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-                            <button class="btn-cancel-review" data-id="${prof.id}">Cancelar</button>
-                            <button class="btn-submit-review" data-id="${prof.id}" style="background:#F97316; color:white; border:none; padding:8px 20px; border-radius:30px;">Enviar Avaliação</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-
-                // Initialize interactive elements for the new card
-                createStarRating(document.getElementById(`starRev_${prof.id}`));
-                
+                // Inicializar componentes do card
                 setupStarRating(`starRev_${prof.id}`, 5);
-                const mediaUploadArea = document.getElementById(`mediaUploadRev_${prof.id}`);
-                const fileInput = document.getElementById(`fileInputRev_${prof.id}`);
-                const previewsContainer = document.getElementById(`mediaPreviewsRev_${prof.id}`);
                 
-                const reviewsHeader = card.querySelector(`.reviews-header[data-id="${prof.id}"]`);
-                const reviewsContent = document.getElementById(`reviews-content-${prof.id}`);
-                const toggleIcon = reviewsHeader.querySelector('.reviews-toggle');
-                
-                reviewsHeader.onclick = () => {
-                    reviewsContent.classList.toggle('show');
-                    toggleIcon.classList.toggle('open');
-                reviewFiles.set(prof.id, []); // Initialize file list for this review form
-
-                if(mediaUploadArea) mediaUploadArea.onclick = () => fileInput.click();
-                if(fileInput) fileInput.onchange = () => handleFileSelect(fileInput, previewsContainer, reviewFiles.get(prof.id));
-            }
-            
-            // Eventos
-            document.querySelectorAll('.btn-add-review').forEach(btn => {
-                btn.onclick = () => {
-                    const id = btn.getAttribute('data-id');
-                    document.querySelectorAll('.inline-review-form').forEach(f => f.classList.remove('show'));
-                    const form = document.getElementById(`rev-${id}`);
-                    if (form) form.classList.add('show');
-                };
-                
+                // Configurar upload de arquivos
                 const uploadArea = document.getElementById(`uploadAreaRev_${prof.id}`);
                 const fileInput = document.getElementById(`fileRev_${prof.id}`);
                 const previewContainer = document.getElementById(`previewRev_${prof.id}`);
@@ -1430,6 +941,7 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                     };
                 }
                 
+                // Botão de enviar avaliação
                 const submitBtn = card.querySelector(`.btn-submit-review[data-id="${prof.id}"]`);
                 if (submitBtn) {
                     submitBtn.onclick = async () => {
@@ -1442,16 +954,16 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                         const coment = document.getElementById(`comentRev_${prof.id}`)?.value.trim();
                         
                         if (!nome || !ap || !coment) {
-                            alert("Preencha nome, AP e avaliação");
+                            alert("Preencha todos os campos");
                             submitBtn.disabled = false;
-                            submitBtn.innerText = 'Enviar Avaliação';
+                            submitBtn.innerText = 'Enviar';
                             return;
                         }
                         
                         if (coment.length < 20) {
                             alert("Avaliação deve ter no mínimo 20 caracteres");
                             submitBtn.disabled = false;
-                            submitBtn.innerText = 'Enviar Avaliação';
+                            submitBtn.innerText = 'Enviar';
                             return;
                         }
                         
@@ -1472,151 +984,31 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                         
                         if (error) {
                             alert("Erro: " + error.message);
-                            submitBtn.disabled = false;
-                            submitBtn.innerText = 'Enviar Avaliação';
                         } else {
-                            alert("✅ Avaliação enviada com sucesso!");
-                            
-                            // Substituir o formulário pelo botão WhatsApp
-                            const formDiv = document.getElementById(`rev-${prof.id}`);
-            });
-            
-            document.querySelectorAll('.btn-submit-review').forEach(btn => {
-                btn.onclick = async () => {
-                    const id = btn.getAttribute('data-id');
-                    btn.disabled = true;
-                    btn.innerText = 'Enviando...';
-
-                    const rating = parseInt(document.getElementById(`starRev_${id}`)?.dataset.rating || '0');
-                    const nome = document.getElementById(`nomeRev_${id}`)?.value.trim();
-                    const ap = document.getElementById(`apRev_${id}`)?.value.trim();
-                    const coment = document.getElementById(`comentRev_${id}`)?.value.trim();
-                    
-                    if (!nome || !ap || !coment || rating === 0) {
-                        alert("Preencha nome, AP, avaliação e dê uma nota (estrelas).");
-                        btn.disabled = false;
-                        btn.innerText = 'Enviar';
-                        return;
-                    }
-
-                    if (coment.length < MIN_REVIEW_LENGTH) {
-                        alert(`Sua avaliação deve ter no mínimo ${MIN_REVIEW_LENGTH} caracteres.`);
-                        btn.disabled = false;
-                        btn.innerText = 'Enviar';
-                        return;
-                    }
-                    
-                    const filesToUpload = reviewFiles.get(id) || [];
-                    const mediaUrls = await uploadMedia(filesToUpload, id);
-
-                    const { error } = await supabaseClient.from('avaliacoes').insert({
-                        profissional_id: id,
-                        nome, 
-                        ap,
-                        comentario: coment,
-                        nota: rating,
-                        fotos: mediaUrls
-                    });
-                    
-                    if (error) {
-                        alert("Erro: " + error.message);
-                        btn.disabled = false;
-                        btn.innerText = 'Enviar';
-                    } else {
-                        // Find the professional object to use its data in the WhatsApp message
-                        const prof = filtrados.find(p => p.id == id);
-
-                        // Hide the "add review" button for this card to prevent re-submission
-                        const addReviewBtn = document.querySelector(`.btn-add-review[data-id="${id}"]`);
-                        if (addReviewBtn) addReviewBtn.style.display = 'none';
-
-                        // Replace form with success message and WhatsApp button
-                        const formDiv = document.getElementById(`rev-${id}`);
-                        if (formDiv && prof) {
-                            const whatsappMessage = gerarTextoWhatsAppCompartilhamento(prof, nome, ap, coment, rating);
-                            const numeroTelefone = prof.telefone.replace(/\D/g, '');
-                            
-                            formDiv.style.padding = '0'; // Remove padding from the container
-                            formDiv.innerHTML = `
-                                <div style="text-align:center; padding:20px;">
-                                    <div style="font-size:1.2rem; margin-bottom:10px;">✅ Avaliação enviada!</div>
-                                    <div style="margin-bottom:20px; color:#1E3A5F;">Obrigado por compartilhar sua experiência!</div>
-                                    <button class="btn-whatsapp" id="whatsapp-btn-${prof.id}" style="background:#25D366; border:none; border-radius:30px; padding:12px 20px; color:white; font-weight:600; cursor:pointer; width:100%;">
-                                <div style="text-align:center; padding:20px; border: 1px solid #e2e8f0; border-radius: 18px; background-color: #f8fafc;">
-                                    <div style="font-size:1.1rem; margin-bottom:10px; color: #1E3A5F; font-weight: 600;">✅ Avaliação enviada!</div>
-                                    <div style="margin-bottom:20px; color:#5b6e8c; font-size: 0.85rem;">Obrigado por compartilhar sua experiência. Que tal enviar para os vizinhos?</div>
-                                    <button class="btn-whatsapp" id="whatsapp-btn-${id}">
-                                        💬 Compartilhar no WhatsApp
-                                    </button>
-                                </div>
-                            `;
-                            
-                            const whatsappBtn = document.getElementById(`whatsapp-btn-${prof.id}`);
-                            if (whatsappBtn) {
-                                whatsappBtn.onclick = () => {
-                                    const textoCodificado = encodeURIComponent(whatsappMessage);
-                                    window.open(`https://wa.me/55${numeroTelefone}?text=${textoCodificado}`, '_blank');
-                                };
-                            }
-                            
-                            submitBtn.disabled = false;
-                            // Não recarregar a página, apenas manter o card
-                            document.getElementById(`whatsapp-btn-${id}`).onclick = () => {
-                                const textoCodificado = encodeURIComponent(whatsappMessage);
-                                window.open(`https://wa.me/?text=${textoCodificado}`, '_blank');
-                            };
-                        } else {
-                            // Fallback if something goes wrong
                             alert("✅ Avaliação enviada!");
                             renderizarCards();
                         }
-                    };
-                }
-                
-                const cancelBtn = card.querySelector(`.btn-cancel-review[data-id="${prof.id}"]`);
-                if (cancelBtn) {
-                    cancelBtn.onclick = () => {
-                        const formDiv = document.getElementById(`rev-${prof.id}`);
-                        formDiv.style.display = 'none';
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = 'Enviar';
                     };
                 }
             }
-                    }
+            
+            // Eventos dos botões
+            document.querySelectorAll('.btn-add-review').forEach(btn => {
+                btn.onclick = () => {
+                    const id = btn.getAttribute('data-id');
+                    document.querySelectorAll('.inline-review-form').forEach(f => f.classList.remove('show'));
+                    document.getElementById(`rev-${id}`)?.classList.add('show');
                 };
             });
             
-            document.querySelectorAll('.btn-add-review').forEach(btn => {
             document.querySelectorAll('.btn-cancel-review').forEach(btn => {
                 btn.onclick = () => {
                     const id = btn.getAttribute('data-id');
-                    document.querySelectorAll('.inline-review-form').forEach(f => f.style.display = 'none');
-                    const form = document.getElementById(`rev-${id}`);
-                    if (form) form.style.display = 'block';
                     document.getElementById(`rev-${id}`)?.classList.remove('show');
                 };
             });
-        }
-        
-        function gerarTextoWhatsAppCompartilhamento(prof, nome, ap, comentario, nota) {
-            const texto = `Olá vizinhos! 🏠
-
-*INDICAÇÃO DE PROFISSIONAL - MY HOUSE*
-
-📌 *Profissional:* ${prof.nome}
-📞 *Contato:* ${prof.telefone}
-⭐ *Minha nota:* ${nota} estrelas
-
-*MINHA EXPERIÊNCIA:*
-"${comentario}"
-
-*Compartilhado por:* ${nome} (AP ${ap})
-
-🔗 *Veja mais em:* ${SITE_URL}
-
----
-Enviado via My House - Indicações entre vizinhos 🏡`;
-            
-            return texto;
         }
 
         function escapeHtml(str) {
@@ -1629,27 +1021,13 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
             });
         }
 
-        // Configurar eventos do modal
+        // Configurar modal de novo profissional
         function configurarModal() {
             setupStarRating('modalStarRating', 5);
-            const openBtn = document.getElementById('openModalBtn');
-            const modal = document.getElementById('modalOverlay');
-            const closeBtn = document.getElementById('closeModalBtn');
             
             const uploadArea = document.getElementById('modalMediaUpload');
-            if (openBtn) openBtn.onclick = () => modal.classList.add('active');
-            if (closeBtn) closeBtn.onclick = () => modal.classList.remove('active');
-            if (modal) modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
-
-            // Initialize interactive elements in the modal
-            createStarRating(document.getElementById('modalStarRating'));
-
-            const mediaUploadArea = document.getElementById('modalMediaUpload');
             const fileInput = document.getElementById('modalFileInput');
             const previewsContainer = document.getElementById('modalMediaPreviews');
-
-            mediaUploadArea.onclick = () => fileInput.click();
-            fileInput.onchange = () => handleFileSelect(fileInput, previewsContainer, modalFiles);
             
             if (uploadArea && fileInput) {
                 uploadArea.onclick = () => fileInput.click();
@@ -1672,72 +1050,7 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                             preview.appendChild(img);
                         }
                         previewsContainer.appendChild(preview);
-            const submitBtn = document.getElementById('submitProfissional');
-            if (submitBtn) {
-                submitBtn.onclick = async () => {
-                    submitBtn.disabled = true;
-                    submitBtn.innerText = 'Cadastrando...';
-
-                    const nome = document.getElementById('modalNome').value.trim();
-                    const categoria = document.getElementById('modalCategoria').value;
-                    const telefone = document.getElementById('modalTelefone').value.trim();
-                    const endereco = document.getElementById('modalEndereco').value.trim();
-                    const indicador = document.getElementById('modalIndicador').value.trim();
-                    const ap = document.getElementById('modalAp').value.trim();
-                    const avaliacao = document.getElementById('modalAvaliacao').value.trim();
-                    const rating = parseInt(document.getElementById('modalStarRating').dataset.rating || '0');
-                    
-                    if (!nome || !telefone || !indicador || !ap || !avaliacao || rating === 0) {
-                        alert("Preencha todos os campos obrigatórios, incluindo a nota (estrelas).");
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Cadastrar profissional';
-                        return;
-                    }
-
-                    if (avaliacao.length < MIN_REVIEW_LENGTH) {
-                        alert(`Sua avaliação deve ter no mínimo ${MIN_REVIEW_LENGTH} caracteres.`);
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Cadastrar profissional';
-                        return;
-                    }
-                    
-                    const tempId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-                    const mediaUrls = await uploadMedia(modalFiles, tempId);
-                    
-                    const { error } = await supabaseClient.from('profissionais').insert({
-                        nome, categoria, telefone, endereco,
-                        indicado_por: indicador,
-                        ap_indicador: ap,
-                        avaliacao_principal: avaliacao,
-                        nota_principal: rating,
-                        fotos_servico: mediaUrls
                     });
-                    
-                    if (error) {
-                        alert("Erro ao cadastrar: " + error.message);
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Cadastrar profissional';
-                    } else {
-                        alert("✅ Profissional cadastrado!");
-                        modal.classList.remove('active');
-                        
-                        // Reset form
-                        document.getElementById('modalNome').value = '';
-                        document.getElementById('modalTelefone').value = '';
-                        document.getElementById('modalEndereco').value = '';
-                        document.getElementById('modalIndicador').value = '';
-                        document.getElementById('modalAp').value = '';
-                        document.getElementById('modalAvaliacao').value = '';
-                        document.getElementById('modalStarRating').dataset.rating = '0';
-                        document.querySelectorAll('#modalStarRating .star-input').forEach(s => s.classList.remove('filled'));
-                        previewsContainer.innerHTML = '';
-                        modalFiles.length = 0;
-
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Cadastrar profissional';
-
-                        renderizarCards();
-                    }
                 };
             }
             
@@ -1757,7 +1070,6 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                 const nome = document.getElementById('modalNome').value.trim();
                 const categoria = document.getElementById('modalCategoria').value;
                 const telefone = document.getElementById('modalTelefone').value.trim();
-                const documento = document.getElementById('modalDocumento').value.trim();
                 const endereco = document.getElementById('modalEndereco').value.trim();
                 const indicador = document.getElementById('modalIndicador').value.trim();
                 const ap = document.getElementById('modalAp').value.trim();
@@ -1786,7 +1098,7 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                 
                 const { error } = await supabase.from('profissionais').insert({
                     id: profissionalId,
-                    nome, categoria, telefone, documento, endereco,
+                    nome, categoria, telefone, endereco,
                     indicado_por: indicador,
                     ap_indicador: ap,
                     avaliacao_principal: avaliacao,
@@ -1801,7 +1113,6 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                     modal.classList.remove('active');
                     document.getElementById('modalNome').value = '';
                     document.getElementById('modalTelefone').value = '';
-                    document.getElementById('modalDocumento').value = '';
                     document.getElementById('modalEndereco').value = '';
                     document.getElementById('modalIndicador').value = '';
                     document.getElementById('modalAp').value = '';
@@ -1815,16 +1126,11 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
             };
         }
 
+        // Inicializar
         renderizarCategorias();
         atualizarSelectCategorias();
         renderizarCards();
         configurarModal();
-        function carregarTudo() {
-            renderizarCategorias();
-            atualizarSelectCategorias();
-            renderizarCards();
-            configurarModal();
-        }
     })();
 </script>
 </body>
