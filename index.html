@@ -628,6 +628,10 @@
             <input type="text" id="modalTelefone" placeholder="(11) 99999-9999">
         </div>
         <div class="form-group">
+            <label>Documento (CNPJ/CPF - opcional)</label>
+            <input type="text" id="modalDocumento" placeholder="00.000.000/0001-00 ou 000.000.000-00">
+        </div>
+        <div class="form-group">
             <label>Endereço (opcional)</label>
             <input type="text" id="modalEndereco" placeholder="Rua, número...">
         </div>
@@ -664,9 +668,7 @@
 <!-- LIGHTBOX PARA MÍDIA -->
 <div id="lightboxOverlay" class="lightbox-overlay">
     <span class="lightbox-close">&times;</span>
-    <div id="lightboxContent" class="lightbox-content">
-        <!-- Imagem ou vídeo será inserido aqui via JS -->
-    </div>
+    <div id="lightboxContent" class="lightbox-content"></div>
 </div>
 
 <script>
@@ -682,17 +684,118 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let categoriaAtiva = "todos";
-        let categoriasSet = new Set(["moveis", "eletricistas", "ar-condicionado", "marmores", "obras", "gesso", "outros"]);
-        const categoriaDisplay = {
-            moveis: "Móveis",
-            eletricistas: "Eletricistas",
-            "ar-condicionado": "Ar Condicionado",
-            marmores: "Mármores/Granitos",
-            obras: "Obras/Reformas",
-            gesso: "Gesso",
-            outros: "Outros"
-        };
-
+        let categorias = []; // Array de objetos {slug, nome}
+        
+        // Função para carregar categorias do banco
+        async function carregarCategorias() {
+            try {
+                const { data, error } = await supabase
+                    .from('categorias')
+                    .select('slug, nome')
+                    .order('nome');
+                if (error) throw error;
+                categorias = data || [];
+                return categorias;
+            } catch (e) {
+                console.error("Erro ao carregar categorias:", e);
+                categorias = [];
+                return [];
+            }
+        }
+        
+        // Obter nome da categoria pelo slug
+        function getNomeCategoria(slug) {
+            const cat = categorias.find(c => c.slug === slug);
+            return cat ? cat.nome : slug;
+        }
+        
+        // Adicionar nova categoria ao banco
+        async function adicionarCategoria(nome) {
+            if (!nome || !nome.trim()) return null;
+            const slug = nome.trim().toLowerCase().replace(/\s+/g, '-');
+            try {
+                const { data, error } = await supabase
+                    .from('categorias')
+                    .insert({ slug, nome: nome.trim() })
+                    .select()
+                    .single();
+                if (error) throw error;
+                return data;
+            } catch (e) {
+                console.error("Erro ao adicionar categoria:", e);
+                alert("Erro ao adicionar categoria. Verifique se já existe.");
+                return null;
+            }
+        }
+        
+        // Renderizar botões de categoria a partir do array categorias
+        function renderizarCategorias() {
+            const container = document.getElementById('categoriasContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            // Botão "Todos"
+            const todosBtn = document.createElement('button');
+            todosBtn.className = 'categoria-btn';
+            todosBtn.setAttribute('data-cat', 'todos');
+            todosBtn.innerText = '📋 Todos';
+            if (categoriaAtiva === 'todos') todosBtn.classList.add('active');
+            todosBtn.onclick = () => {
+                document.querySelectorAll('.categoria-btn').forEach(b => b.classList.remove('active'));
+                todosBtn.classList.add('active');
+                categoriaAtiva = 'todos';
+                renderizarCards();
+            };
+            container.appendChild(todosBtn);
+            
+            // Botões para cada categoria
+            for (const cat of categorias) {
+                const btn = document.createElement('button');
+                btn.className = 'categoria-btn';
+                btn.setAttribute('data-cat', cat.slug);
+                btn.innerText = cat.nome;
+                if (categoriaAtiva === cat.slug) btn.classList.add('active');
+                btn.onclick = () => {
+                    document.querySelectorAll('.categoria-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    categoriaAtiva = cat.slug;
+                    renderizarCards();
+                };
+                container.appendChild(btn);
+            }
+            
+            // Botão "+ Nova categoria"
+            const addBtn = document.createElement('button');
+            addBtn.className = 'add-cat-btn';
+            addBtn.innerText = '+ Nova categoria';
+            addBtn.onclick = async () => {
+                let nova = prompt("Digite o nome da nova categoria");
+                if (nova && nova.trim()) {
+                    const novaCat = await adicionarCategoria(nova.trim());
+                    if (novaCat) {
+                        await carregarCategorias(); // recarrega lista
+                        renderizarCategorias();
+                        atualizarSelectCategorias();
+                    }
+                }
+            };
+            container.appendChild(addBtn);
+        }
+        
+        // Atualizar select de categoria no modal
+        function atualizarSelectCategorias() {
+            const select = document.getElementById('modalCategoria');
+            if (!select) return;
+            select.innerHTML = '';
+            for (const cat of categorias) {
+                const option = document.createElement('option');
+                option.value = cat.slug;
+                option.textContent = cat.nome;
+                select.appendChild(option);
+            }
+        }
+        
+        // Variáveis globais do estado
         let modalFiles = [];
         let reviewFilesMap = new Map();
 
@@ -738,25 +841,20 @@
         // Upload de arquivos para o Storage
         async function uploadFiles(files, folder) {
             if (!files || files.length === 0) return [];
-            
             const urls = [];
             for (const file of files) {
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substr(2, 6)}.${fileExt}`;
-                
                 const { error } = await supabase.storage
                     .from(BUCKET_NAME)
                     .upload(fileName, file);
-                
                 if (error) {
                     console.error("Upload error:", error);
                     continue;
                 }
-                
                 const { data: urlData } = supabase.storage
                     .from(BUCKET_NAME)
                     .getPublicUrl(fileName);
-                
                 if (urlData) urls.push(urlData.publicUrl);
             }
             return urls;
@@ -765,44 +863,34 @@
         // Lida com a pré-visualização de arquivos
         function handleFilePreviews(fileInput, previewsContainer, fileList) {
             previewsContainer.innerHTML = '';
-            fileList.length = 0; // Limpa a lista de arquivos associada
-
+            fileList.length = 0;
             const files = Array.from(fileInput.files);
-
             files.forEach(file => {
                 fileList.push(file);
-
                 const url = URL.createObjectURL(file);
                 const isVideo = file.type.startsWith('video/');
                 const previewItem = document.createElement('div');
                 previewItem.className = 'media-preview-item';
-
                 const mediaElement = isVideo ? document.createElement('video') : document.createElement('img');
                 mediaElement.src = url;
                 if (isVideo) mediaElement.muted = true;
-
                 previewItem.appendChild(mediaElement);
-
                 const removeBtn = document.createElement('span');
                 removeBtn.className = 'media-remove-btn';
                 removeBtn.innerHTML = '&times;';
                 removeBtn.onclick = (e) => {
-                    e.stopPropagation(); // Impede que o lightbox abra ao clicar no 'x'
+                    e.stopPropagation();
                     const index = fileList.indexOf(file);
                     if (index > -1) fileList.splice(index, 1);
                     previewItem.remove();
                     URL.revokeObjectURL(url);
                 };
                 previewItem.appendChild(removeBtn);
-
-                // Adiciona o clique para abrir o lightbox
                 previewItem.onclick = () => openLightbox(url, isVideo);
-
                 previewsContainer.appendChild(previewItem);
             });
         }
 
-        // Verifica se uma URL é de um vídeo
         function isUrlVideo(url) {
             if (!url) return false;
             const videoExtensions = ['.mp4', '.mov', '.webm', '.ogg'];
@@ -822,9 +910,7 @@
                     .from('profissionais')
                     .select('*')
                     .order('created_at', { ascending: false });
-                    
                 if (error) throw error;
-                
                 for (let p of profs || []) {
                     const { data: avals } = await supabase
                         .from('avaliacoes')
@@ -832,7 +918,6 @@
                         .eq('profissional_id', p.id)
                         .order('created_at', { ascending: false });
                     p.avaliacoes = avals || [];
-                    if (p.categoria) categoriasSet.add(p.categoria);
                 }
                 return profs || [];
             } catch (e) {
@@ -841,11 +926,9 @@
             }
         }
 
-        // Calcular média de estrelas
         function calcularMedia(prof) {
             let soma = prof.nota_principal || 5;
             let count = 1;
-            
             if (prof.avaliacoes && prof.avaliacoes.length) {
                 prof.avaliacoes.forEach(av => {
                     if (av.nota) {
@@ -857,7 +940,6 @@
             return (soma / count).toFixed(1);
         }
 
-        // Renderizar estrelas
         function renderStars(rating) {
             const filled = Math.floor(rating);
             return Array(5).fill().map((_, i) => 
@@ -872,80 +954,15 @@
             ).join('');
         }
 
-        // Renderizar categorias
-        function renderizarCategorias() {
-            const container = document.getElementById('categoriasContainer');
-            if (!container) return;
-            container.innerHTML = ''; // Limpa para reconstruir de forma consistente
-            
-            const allCats = ['todos', ...Array.from(categoriasSet).sort()];
-
-            for (const cat of allCats) {
-                const btn = document.createElement('button');
-                btn.className = 'categoria-btn';
-                btn.setAttribute('data-cat', cat);
-                btn.innerText = cat === 'todos' 
-                    ? '📋 Todos' 
-                    : categoriaDisplay[cat] || cat;
-
-                if (cat === categoriaAtiva) {
-                    btn.classList.add('active');
-                }
-
-                btn.onclick = () => {
-                    document.querySelectorAll('.categoria-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    categoriaAtiva = cat;
-                    renderizarCards();
-                };
-                container.appendChild(btn);
-            }
-            
-            const addBtn = document.createElement('button');
-            addBtn.className = 'add-cat-btn';
-            addBtn.innerText = '+ Nova categoria';
-            addBtn.onclick = () => {
-                let nova = prompt("Digite o nome da nova categoria");
-                if (nova && nova.trim()) {
-                    let key = nova.trim().toLowerCase().replace(/\s/g, '');
-                    categoriasSet.add(key);
-                    categoriaDisplay[key] = nova.trim();
-                    renderizarCategorias();
-                    atualizarSelectCategorias();
-                }
-            };
-            container.appendChild(addBtn);
-        }
-
-        function atualizarSelectCategorias() {
-            const select = document.getElementById('modalCategoria');
-            if (!select) return;
-            select.innerHTML = '';
-            for (let cat of categoriasSet) {
-                const opt = document.createElement('option');
-                opt.value = cat;
-                opt.innerText = categoriaDisplay[cat] || cat;
-                select.appendChild(opt);
-            }
-        }
-
         // Renderizar cards de profissionais
         async function renderizarCards() {
             const container = document.getElementById('listaProfissionais');
             container.innerHTML = '<div class="loading">🔄 Carregando...</div>';
             
             const profissionais = await carregarProfissionais();
-
-            // Após carregar, o `categoriasSet` pode ter novos itens.
-            // Verificamos se o número de botões de categoria renderizados corresponde ao tamanho do Set.
-            // Isso corrige o bug de uma nova categoria não aparecer na barra superior.
-            const renderedCatButtons = document.querySelectorAll('#categoriasContainer .categoria-btn');
-            if (renderedCatButtons.length !== categoriasSet.size + 1) { // +1 para o botão "Todos"
-                renderizarCategorias();
-                atualizarSelectCategorias();
-            }
-            
-            let filtrados = categoriaAtiva === 'todos' ? profissionais : profissionais.filter(p => p.categoria === categoriaAtiva);
+            let filtrados = categoriaAtiva === 'todos' 
+                ? profissionais 
+                : profissionais.filter(p => p.categoria === categoriaAtiva);
             
             if (filtrados.length === 0) {
                 container.innerHTML = `<div style="text-align:center; padding:40px;">🏠 Nenhum profissional encontrado</div>`;
@@ -987,11 +1004,12 @@
                     <div class="card-header">
                         <div class="prof-title">
                             <span class="prof-name">${escapeHtml(prof.nome)}</span>
-                            <span class="categoria-tag">${categoriaDisplay[prof.categoria] || prof.categoria}</span>
+                            <span class="categoria-tag">${getNomeCategoria(prof.categoria)}</span>
                         </div>
                         <div class="rating-stars">${renderStars(media)}<span class="rating-value">(${media})</span></div>
                         <div class="contact-info">
                             <span>📞 ${escapeHtml(prof.telefone)}</span>
+                            ${prof.documento ? `<span>📄 ${escapeHtml(prof.documento)}</span>` : ''}
                             ${prof.endereco ? `<span>📍 ${escapeHtml(prof.endereco)}</span>` : ''}
                         </div>
                     </div>
@@ -1028,52 +1046,43 @@
                 `;
                 container.appendChild(card);
                 
-                // Inicializar componentes do card
                 reviewFilesMap.set(prof.id, []);
                 setupStarRating(`starRev_${prof.id}`, 5);
                 
-                // Configurar upload de arquivos
                 const uploadArea = document.getElementById(`uploadAreaRev_${prof.id}`);
                 const fileInput = document.getElementById(`fileRev_${prof.id}`);
                 const previewContainer = document.getElementById(`previewRev_${prof.id}`);
-                
                 if (uploadArea && fileInput) {
                     uploadArea.onclick = () => fileInput.click();
                     fileInput.onchange = () => handleFilePreviews(fileInput, previewContainer, reviewFilesMap.get(prof.id));
                 }
                 
-                // Botão de enviar avaliação
                 const submitBtn = card.querySelector(`.btn-submit-review[data-id="${prof.id}"]`);
                 if (submitBtn) {
                     submitBtn.onclick = async () => {
                         submitBtn.disabled = true;
                         submitBtn.innerText = 'Enviando...';
-                        
                         const rating = parseInt(document.getElementById(`starRev_${prof.id}`)?.dataset.rating || '5');
                         const nome = document.getElementById(`nomeRev_${prof.id}`)?.value.trim();
                         const ap = document.getElementById(`apRev_${prof.id}`)?.value.trim();
                         const coment = document.getElementById(`comentRev_${prof.id}`)?.value.trim();
-                        
                         if (!nome || !ap || !coment) {
                             alert("Preencha todos os campos");
                             submitBtn.disabled = false;
                             submitBtn.innerText = 'Enviar';
                             return;
                         }
-                        
                         if (coment.length < 20) {
                             alert("Avaliação deve ter no mínimo 20 caracteres");
                             submitBtn.disabled = false;
                             submitBtn.innerText = 'Enviar';
                             return;
                         }
-                        
                         let fotosUrls = [];
                         const filesToUpload = reviewFilesMap.get(prof.id);
                         if (filesToUpload && filesToUpload.length > 0) {
                             fotosUrls = await uploadFiles(filesToUpload, `avaliacoes/${prof.id}`);
                         }
-                        
                         const { error } = await supabase.from('avaliacoes').insert({
                             id: generateId(),
                             profissional_id: prof.id,
@@ -1082,7 +1091,6 @@
                             nota: rating,
                             fotos: fotosUrls
                         });
-                        
                         if (error) {
                             alert("Erro: " + error.message);
                         } else {
@@ -1095,7 +1103,6 @@
                 }
             }
             
-            // Eventos dos botões
             document.querySelectorAll('.btn-add-review').forEach(btn => {
                 btn.onclick = () => {
                     const id = btn.getAttribute('data-id');
@@ -1129,7 +1136,6 @@
             const uploadArea = document.getElementById('modalMediaUpload');
             const fileInput = document.getElementById('modalFileInput');
             const previewsContainer = document.getElementById('modalMediaPreviews');
-            
             if (uploadArea && fileInput) {
                 uploadArea.onclick = () => fileInput.click();
                 fileInput.onchange = () => handleFilePreviews(fileInput, previewsContainer, modalFiles);
@@ -1138,7 +1144,6 @@
             const openBtn = document.getElementById('openModalBtn');
             const modal = document.getElementById('modalOverlay');
             const closeBtn = document.getElementById('closeModalBtn');
-            
             openBtn.onclick = () => modal.classList.add('active');
             closeBtn.onclick = () => modal.classList.remove('active');
             modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
@@ -1149,8 +1154,9 @@
                 submitBtn.innerText = 'Cadastrando...';
                 
                 const nome = document.getElementById('modalNome').value.trim();
-                const categoria = document.getElementById('modalCategoria').value;
+                const categoria_slug = document.getElementById('modalCategoria').value;
                 const telefone = document.getElementById('modalTelefone').value.trim();
+                const documento = document.getElementById('modalDocumento').value.trim();
                 const endereco = document.getElementById('modalEndereco').value.trim();
                 const indicador = document.getElementById('modalIndicador').value.trim();
                 const ap = document.getElementById('modalAp').value.trim();
@@ -1163,7 +1169,6 @@
                     submitBtn.innerText = 'Cadastrar profissional';
                     return;
                 }
-                
                 if (avaliacao.length < 20) {
                     alert("Avaliação deve ter no mínimo 20 caracteres");
                     submitBtn.disabled = false;
@@ -1179,7 +1184,11 @@
                 
                 const { error } = await supabase.from('profissionais').insert({
                     id: profissionalId,
-                    nome, categoria, telefone, endereco,
+                    nome,
+                    categoria: categoria_slug,
+                    telefone,
+                    documento,
+                    endereco,
                     indicado_por: indicador,
                     ap_indicador: ap,
                     avaliacao_principal: avaliacao,
@@ -1194,6 +1203,7 @@
                     modal.classList.remove('active');
                     document.getElementById('modalNome').value = '';
                     document.getElementById('modalTelefone').value = '';
+                    document.getElementById('modalDocumento').value = '';
                     document.getElementById('modalEndereco').value = '';
                     document.getElementById('modalIndicador').value = '';
                     document.getElementById('modalAp').value = '';
@@ -1207,25 +1217,21 @@
             };
         }
 
-        // Funções do Lightbox
+        // Lightbox functions
         let lightboxOverlay, lightboxContent;
-
         function initLightbox() {
             lightboxOverlay = document.getElementById('lightboxOverlay');
             lightboxContent = document.getElementById('lightboxContent');
             const lightboxClose = lightboxOverlay.querySelector('.lightbox-close');
-
             const closeAction = () => {
                 lightboxOverlay.classList.remove('show');
-                lightboxContent.innerHTML = ''; // Para parar vídeos
+                lightboxContent.innerHTML = '';
             };
-
             lightboxOverlay.onclick = (e) => {
                 if (e.target === lightboxOverlay) closeAction();
             };
             lightboxClose.onclick = closeAction;
         }
-
         function openLightbox(src, isVideo = false) {
             lightboxContent.innerHTML = '';
             if (isVideo) {
@@ -1241,15 +1247,19 @@
             }
             lightboxOverlay.classList.add('show');
         }
+        window.openLightbox = openLightbox;
 
-        window.openLightbox = openLightbox; // Expor globalmente para ser acessível pelo onclick
-
-        // Inicializar
-        renderizarCategorias();
-        atualizarSelectCategorias();
-        renderizarCards();
-        configurarModal();
-        initLightbox();
+        // Inicialização principal: carregar categorias e depois renderizar
+        async function iniciar() {
+            await carregarCategorias();
+            renderizarCategorias();
+            atualizarSelectCategorias();
+            renderizarCards();
+            configurarModal();
+            initLightbox();
+        }
+        
+        iniciar();
     })();
 </script>
 </body>
