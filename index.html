@@ -1350,24 +1350,21 @@
                 }).join('\n');
             }
 
-            const texto = `Olá vizinhos \u{1F3E0}
+            const texto = `Olá vizinhos! 👋
 
 *INDICAÇÃO DE PROFISSIONAL - MY HOUSE*
 
-\u{1F4CC} *Profissional:* ${profNome}
-\u{1F4DE} *Contato:* ${profTelefone}
-\u{2B50} *Minha nota:* ${estrelas}
+*Profissional:* ${profNome}
+*Contato:* ${profTelefone}
 
 *MINHA EXPERIÊNCIA:*
 "${comentario}"${mediaTexto}
 
-*Compartilhado por:* ${avaliador} (AP ${ap})
-
-\u{1F517} *Veja mais detalhes no app:*
+*Veja mais detalhes no app:*
 ${APP_URL}
 
 ---
-Enviado via My House - Indicações entre vizinhos \u{1F3E1}`;
+Enviado via My House - Indicações entre vizinhos`;
 
             return encodeURIComponent(texto);
         }
