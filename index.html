@@ -353,6 +353,20 @@
             color: white;
         }
 
+        .photos-area {
+            padding: 12px 16px;
+            background: #fefefe;
+            border-top: 1px solid #eef2f8;
+            border-bottom: 1px solid #eef2f8;
+        }
+
+        .photos-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #F97316;
+            margin-bottom: 8px;
+        }
+
         .reviews-area {
             padding: 14px 16px;
         }
@@ -956,10 +970,19 @@
             return videoExtensions.some(ext => url.toLowerCase().includes(ext));
         }
 
-        function renderMediaBadge(url) {
-            const isVideo = isUrlVideo(url);
-            const label = isVideo ? '📹 Vídeo' : '📷 Foto';
-            return `<div class="photo-badge" data-url="${escapeHtml(url)}" data-is-video="${isVideo}">${label}</div>`;
+        function renderMediaThumbnailItems(mediaUrls) {
+            if (!mediaUrls || mediaUrls.length === 0) return '';
+            return mediaUrls.map(url => {
+                const isVideo = isUrlVideo(url);
+                const mediaElement = isVideo
+                    ? `<video src="${escapeHtml(url)}" muted></video>`
+                    : `<img src="${escapeHtml(url)}" alt="Mídia da avaliação">`;
+                return `
+                    <div class="media-preview-item" data-url="${escapeHtml(url)}" data-is-video="${isVideo}">
+                        ${mediaElement}
+                    </div>
+                `;
+            }).join('');
         }
 
         // Carregar profissionais do banco
@@ -1051,7 +1074,7 @@
                                     <div class="review-stars">${renderSmallStars(av.nota || 5)}</div>
                                 </div>
                                 <div class="review-text">${escapeHtml(av.comentario)}</div>
-                                ${av.fotos && av.fotos.length ? `<div class="photos-list">${av.fotos.map(renderMediaBadge).join('')}</div>` : ''}
+                                ${av.fotos && av.fotos.length ? `<div class="media-previews" style="margin-top: 8px;">${renderMediaThumbnailItems(av.fotos)}</div>` : ''}
                             </div>
                         `;
                     });
@@ -1075,7 +1098,7 @@
                     ${prof.fotos_servico && prof.fotos_servico.length ? `
                         <div class="photos-area">
                             <div class="photos-label">📸 Fotos do serviço</div>
-                            <div class="photos-list">${prof.fotos_servico.map(renderMediaBadge).join('')}</div>
+                            <div class="media-previews">${renderMediaThumbnailItems(prof.fotos_servico)}</div>
                         </div>
                     ` : ''}
                     <div class="reviews-area">
@@ -1106,17 +1129,22 @@
                 container.appendChild(card);
                 
                 // Anexa os eventos da galeria para as mídias já existentes no card
-                card.querySelectorAll('.photos-list').forEach(list => {
-                    const badges = list.querySelectorAll('.photo-badge');
-                    if (badges.length === 0) return;
+                card.querySelectorAll('.media-previews').forEach(previewContainer => {
+                    // Ignora os containers de preview dos formulários de upload, pois eles têm seus próprios handlers
+                    if (previewContainer.id.startsWith('previewRev_') || previewContainer.id.startsWith('modalMediaPreviews')) {
+                        return;
+                    }
 
-                    const items = Array.from(badges).map(badge => ({
-                        src: badge.dataset.url,
-                        isVideo: badge.dataset.isVideo === 'true'
+                    const thumbs = previewContainer.querySelectorAll('.media-preview-item');
+                    if (thumbs.length === 0) return;
+
+                    const items = Array.from(thumbs).map(thumb => ({
+                        src: thumb.dataset.url,
+                        isVideo: thumb.dataset.isVideo === 'true'
                     }));
 
-                    badges.forEach((badge, index) => {
-                        badge.onclick = () => openLightbox(items, index);
+                    thumbs.forEach((thumb, index) => {
+                        thumb.onclick = () => openLightbox(items, index);
                     });
                 });
 
