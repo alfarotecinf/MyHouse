@@ -1247,7 +1247,18 @@
                         if (error) {
                             alert("Erro: " + error.message);
                         } else {
-                            alert("✅ Avaliação enviada!");
+                            const textoWhatsApp = gerarTextoWhatsApp(
+                                prof.nome,
+                                prof.telefone,
+                                nome,
+                                ap,
+                                rating,
+                                coment,
+                                fotosUrls
+                            );
+                            if (confirm("✅ Avaliação enviada! Deseja compartilhar no WhatsApp?")) {
+                                window.open(`https://wa.me/?text=${textoWhatsApp}`, '_blank');
+                            }
                             renderizarCards();
                         }
                         submitBtn.disabled = false;
@@ -1280,6 +1291,41 @@
                 if (m === '>') return '&gt;';
                 return m;
             });
+        }
+
+        function gerarTextoWhatsApp(profNome, profTelefone, avaliador, ap, nota, comentario, mediaUrls) {
+            const APP_URL = "https://my-house-gray.vercel.app";
+            const estrelas = '★'.repeat(nota) + '☆'.repeat(5 - nota);
+
+            let mediaTexto = '';
+            if (mediaUrls && mediaUrls.length > 0) {
+                mediaTexto = '\n\n*MÍDIAS DO SERVIÇO:*\n';
+                mediaTexto += mediaUrls.map(url => {
+                    const isVideo = isUrlVideo(url);
+                    return `${isVideo ? '📹 Vídeo' : '📷 Foto'}: ${url}`;
+                }).join('\n');
+            }
+
+            const texto = `Olá vizinhos! 🏠
+
+*INDICAÇÃO DE PROFISSIONAL - MY HOUSE*
+
+📌 *Profissional:* ${profNome}
+📞 *Contato:* ${profTelefone}
+⭐ *Minha nota:* ${estrelas}
+
+*MINHA EXPERIÊNCIA:*
+"${comentario}"${mediaTexto}
+
+*Compartilhado por:* ${avaliador} (AP ${ap})
+
+🔗 *Veja mais detalhes e outras avaliações no app:*
+${APP_URL}
+
+---
+Enviado via My House - Indicações entre vizinhos 🏡`;
+
+            return encodeURIComponent(texto);
         }
 
         // Configurar modal de novo profissional
@@ -1352,7 +1398,18 @@
                 if (error) {
                     alert("Erro ao cadastrar: " + error.message);
                 } else {
-                    alert("✅ Profissional cadastrado com sucesso!");
+                    const textoWhatsApp = gerarTextoWhatsApp(
+                        nome,
+                        telefone,
+                        indicador,
+                        ap,
+                        nota,
+                        avaliacao,
+                        fotosUrls
+                    );
+                    if (confirm("✅ Profissional cadastrado com sucesso! Deseja compartilhar no WhatsApp?")) {
+                        window.open(`https://wa.me/?text=${textoWhatsApp}`, '_blank');
+                    }
                     modal.classList.remove('active');
                     document.getElementById('modalNome').value = '';
                     document.getElementById('modalTelefone').value = '';
