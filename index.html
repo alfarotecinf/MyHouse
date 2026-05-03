@@ -770,7 +770,7 @@
             try {
                 const { data, error } = await supabase
                     .from('categorias')
-                    .insert({ slug, nome: nome.trim() })
+                    .insert({ id: generateId(), slug, nome: nome.trim() })
                     .select()
                     .single();
                 if (error) throw error;
