@@ -587,6 +587,43 @@
             font-weight: 300;
             cursor: pointer;
         }
+        .lightbox-prev, .lightbox-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: rgba(0,0,0,0.3);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .lightbox-prev:hover, .lightbox-next:hover {
+            background: rgba(0,0,0,0.6);
+        }
+        .lightbox-prev {
+            left: 20px;
+        }
+        .lightbox-next {
+            right: 20px;
+        }
+        .lightbox-counter {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -667,8 +704,11 @@
 
 <!-- LIGHTBOX PARA MÍDIA -->
 <div id="lightboxOverlay" class="lightbox-overlay">
-    <span class="lightbox-close">&times;</span>
+    <span class="lightbox-close" title="Fechar">&times;</span>
+    <span class="lightbox-prev" title="Anterior">&#10094;</span>
+    <span class="lightbox-next" title="Próximo">&#10095;</span>
     <div id="lightboxContent" class="lightbox-content"></div>
+    <div class="lightbox-counter"></div>
 </div>
 
 <script>
@@ -862,31 +902,50 @@
 
         // Lida com a pré-visualização de arquivos
         function handleFilePreviews(fileInput, previewsContainer, fileList) {
+            // Limpa previews e a lista de arquivos de estado
             previewsContainer.innerHTML = '';
             fileList.length = 0;
+
             const files = Array.from(fileInput.files);
-            files.forEach(file => {
-                fileList.push(file);
-                const url = URL.createObjectURL(file);
-                const isVideo = file.type.startsWith('video/');
+            
+            // Cria uma lista de objetos com os dados necessários para os previews e o lightbox
+            const previewItemsData = files.map(file => ({
+                file: file,
+                url: URL.createObjectURL(file),
+                isVideo: file.type.startsWith('video/')
+            }));
+
+            // Preenche a lista de arquivos de estado
+            previewItemsData.forEach(item => fileList.push(item.file));
+
+            // Cria os elementos de preview no DOM
+            previewItemsData.forEach((itemData, index) => {
                 const previewItem = document.createElement('div');
                 previewItem.className = 'media-preview-item';
-                const mediaElement = isVideo ? document.createElement('video') : document.createElement('img');
-                mediaElement.src = url;
-                if (isVideo) mediaElement.muted = true;
+
+                const mediaElement = itemData.isVideo ? document.createElement('video') : document.createElement('img');
+                mediaElement.src = itemData.url;
+                if (itemData.isVideo) mediaElement.muted = true;
                 previewItem.appendChild(mediaElement);
+
                 const removeBtn = document.createElement('span');
                 removeBtn.className = 'media-remove-btn';
                 removeBtn.innerHTML = '&times;';
                 removeBtn.onclick = (e) => {
                     e.stopPropagation();
-                    const index = fileList.indexOf(file);
+                    const index = fileList.indexOf(itemData.file);
                     if (index > -1) fileList.splice(index, 1);
                     previewItem.remove();
-                    URL.revokeObjectURL(url);
+                    URL.revokeObjectURL(itemData.url); // Libera a memória do objeto URL
                 };
                 previewItem.appendChild(removeBtn);
-                previewItem.onclick = () => openLightbox(url, isVideo);
+
+                // Ao clicar no preview, abre a galeria
+                previewItem.onclick = () => {
+                    const lightboxItems = previewItemsData.map(d => ({ src: d.url, isVideo: d.isVideo }));
+                    openLightbox(lightboxItems, index);
+                };
+
                 previewsContainer.appendChild(previewItem);
             });
         }
@@ -900,7 +959,7 @@
         function renderMediaBadge(url) {
             const isVideo = isUrlVideo(url);
             const label = isVideo ? '📹 Vídeo' : '📷 Foto';
-            return `<div class="photo-badge" onclick="openLightbox('${escapeHtml(url)}', ${isVideo})">${label}</div>`;
+            return `<div class="photo-badge" data-url="${escapeHtml(url)}" data-is-video="${isVideo}">${label}</div>`;
         }
 
         // Carregar profissionais do banco
@@ -1046,6 +1105,21 @@
                 `;
                 container.appendChild(card);
                 
+                // Anexa os eventos da galeria para as mídias já existentes no card
+                card.querySelectorAll('.photos-list').forEach(list => {
+                    const badges = list.querySelectorAll('.photo-badge');
+                    if (badges.length === 0) return;
+
+                    const items = Array.from(badges).map(badge => ({
+                        src: badge.dataset.url,
+                        isVideo: badge.dataset.isVideo === 'true'
+                    }));
+
+                    badges.forEach((badge, index) => {
+                        badge.onclick = () => openLightbox(items, index);
+                    });
+                });
+
                 reviewFilesMap.set(prof.id, []);
                 setupStarRating(`starRev_${prof.id}`, 5);
                 
@@ -1217,37 +1291,71 @@
             };
         }
 
-        // Lightbox functions
-        let lightboxOverlay, lightboxContent;
+        // Funções da Galeria Lightbox
+        let lightboxOverlay, lightboxContent, lightboxPrev, lightboxNext, lightboxCounter;
+        let currentLightboxItems = [];
+        let currentLightboxIndex = 0;
+
         function initLightbox() {
             lightboxOverlay = document.getElementById('lightboxOverlay');
             lightboxContent = document.getElementById('lightboxContent');
+            lightboxPrev = lightboxOverlay.querySelector('.lightbox-prev');
+            lightboxNext = lightboxOverlay.querySelector('.lightbox-next');
+            lightboxCounter = lightboxOverlay.querySelector('.lightbox-counter');
             const lightboxClose = lightboxOverlay.querySelector('.lightbox-close');
-            const closeAction = () => {
-                lightboxOverlay.classList.remove('show');
-                lightboxContent.innerHTML = '';
-            };
+
             lightboxOverlay.onclick = (e) => {
-                if (e.target === lightboxOverlay) closeAction();
+                if (e.target === lightboxOverlay) closeLightbox();
             };
-            lightboxClose.onclick = closeAction;
+            lightboxClose.onclick = closeLightbox;
+            lightboxPrev.onclick = () => showPrevItem();
+            lightboxNext.onclick = () => showNextItem();
         }
-        function openLightbox(src, isVideo = false) {
+
+        function closeLightbox() {
+            lightboxOverlay.classList.remove('show');
+            lightboxContent.innerHTML = ''; // Para a reprodução de vídeos
+        }
+
+        function showPrevItem() {
+            if (currentLightboxIndex > 0) {
+                showLightboxItem(currentLightboxIndex - 1);
+            }
+        }
+
+        function showNextItem() {
+            if (currentLightboxIndex < currentLightboxItems.length - 1) {
+                showLightboxItem(currentLightboxIndex + 1);
+            }
+        }
+
+        function showLightboxItem(index) {
+            currentLightboxIndex = index;
+            const item = currentLightboxItems[index];
+            
             lightboxContent.innerHTML = '';
-            if (isVideo) {
+            if (item.isVideo) {
                 const video = document.createElement('video');
-                video.src = src;
+                video.src = item.src;
                 video.controls = true;
                 video.autoplay = true;
                 lightboxContent.appendChild(video);
             } else {
                 const img = document.createElement('img');
-                img.src = src;
+                img.src = item.src;
                 lightboxContent.appendChild(img);
             }
+
+            lightboxCounter.textContent = `${index + 1} / ${currentLightboxItems.length}`;
+            lightboxPrev.style.display = index > 0 ? 'flex' : 'none';
+            lightboxNext.style.display = index < currentLightboxItems.length - 1 ? 'flex' : 'none';
+        }
+
+        function openLightbox(items, startIndex) {
+            currentLightboxItems = items;
+            showLightboxItem(startIndex);
             lightboxOverlay.classList.add('show');
         }
-        window.openLightbox = openLightbox;
 
         // Inicialização principal: carregar categorias e depois renderizar
         async function iniciar() {
