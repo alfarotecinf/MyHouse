@@ -255,6 +255,37 @@
             overflow: hidden;
         }
 
+        .card-expander {
+            padding: 0 16px 16px;
+        }
+
+        .btn-toggle-reviews {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #1E3A5F;
+            width: 100%;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+
+        .btn-toggle-reviews:hover {
+            background-color: #f1f5f9;
+        }
+
+        .card-collapsible-content {
+            display: none;
+        }
+
+        .card.expanded .card-collapsible-content {
+            display: block;
+        }
+
+
         .card-header {
             padding: 16px;
         }
@@ -1054,6 +1085,7 @@
             container.innerHTML = '';
             for (let prof of filtrados) {
                 const media = calcularMedia(prof);
+                const totalAvaliacoes = 1 + (prof.avaliacoes?.length || 0);
                 
                 let avaliacoesHtml = `
                     <div class="review-item">
@@ -1088,45 +1120,64 @@
                             <span class="prof-name">${escapeHtml(prof.nome)}</span>
                             <span class="categoria-tag">${getNomeCategoria(prof.categoria_slug)}</span>
                         </div>
-                        <div class="rating-stars">${renderStars(media)}<span class="rating-value">(${media})</span></div>
                         <div class="contact-info">
                             <span>📞 ${escapeHtml(prof.telefone)}</span>
                             ${prof.documento ? `<span>📄 ${escapeHtml(prof.documento)}</span>` : ''}
                             ${prof.endereco ? `<span>📍 ${escapeHtml(prof.endereco)}</span>` : ''}
                         </div>
+                        <div class="rating-stars">${renderStars(media)}<span class="rating-value">(${media})</span></div>
                     </div>
-                    ${prof.fotos_servico && prof.fotos_servico.length ? `
-                        <div class="photos-area">
-                            <div class="photos-label">📸 Fotos do serviço</div>
-                            <div class="media-previews">${renderMediaThumbnailItems(prof.fotos_servico)}</div>
-                        </div>
-                    ` : ''}
-                    <div class="reviews-area">
-                        <div style="font-weight:600; margin-bottom:10px;">🗣️ Avaliações</div>
-                        ${avaliacoesHtml}
-                        <button class="btn-add-review" data-id="${prof.id}">⭐ Avaliar este profissional</button>
-                        <div id="rev-${prof.id}" class="inline-review-form">
-                            <div style="text-align:center; margin-bottom:10px;">
-                                <div class="star-rating-input" id="starRev_${prof.id}" data-rating="5"></div>
+                    <div class="card-expander">
+                        <button class="btn-toggle-reviews">
+                            Ver ${totalAvaliacoes} ${totalAvaliacoes > 1 ? 'avaliações' : 'avaliação'} e mídias ▾
+                        </button>
+                    </div>
+                    <div class="card-collapsible-content">
+                        ${prof.fotos_servico && prof.fotos_servico.length ? `
+                            <div class="photos-area">
+                                <div class="photos-label">📸 Mídia da Indicação</div>
+                                <div class="media-previews">${renderMediaThumbnailItems(prof.fotos_servico)}</div>
                             </div>
-                            <div class="review-input-row">
-                                <input type="text" id="nomeRev_${prof.id}" placeholder="Seu nome *">
-                                <input type="text" id="apRev_${prof.id}" placeholder="Seu AP *">
-                            </div>
-                            <textarea id="comentRev_${prof.id}" class="review-form-text" rows="3" placeholder="Sua avaliação * (mín. 20 caracteres)"></textarea>
-                            <div class="media-upload-area" id="uploadAreaRev_${prof.id}">
-                                📸 Adicionar foto/vídeo
-                                <input type="file" id="fileRev_${prof.id}" accept="image/*,video/*" style="display:none" multiple>
-                            </div>
-                            <div id="previewRev_${prof.id}" class="media-previews"></div>
-                            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-                                <button class="btn-cancel-review" data-id="${prof.id}">Cancelar</button>
-                                <button class="btn-submit-review" data-id="${prof.id}" style="background:#F97316; color:white; border:none; padding:8px 20px; border-radius:30px;">Enviar</button>
+                        ` : ''}
+                        <div class="reviews-area">
+                            <div style="font-weight:600; margin-bottom:10px;">🗣️ Avaliações Detalhadas</div>
+                            ${avaliacoesHtml}
+                            <button class="btn-add-review" data-id="${prof.id}">⭐ Avaliar este profissional</button>
+                            <div id="rev-${prof.id}" class="inline-review-form">
+                                <div style="text-align:center; margin-bottom:10px;">
+                                    <div class="star-rating-input" id="starRev_${prof.id}" data-rating="5"></div>
+                                </div>
+                                <div class="review-input-row">
+                                    <input type="text" id="nomeRev_${prof.id}" placeholder="Seu nome *">
+                                    <input type="text" id="apRev_${prof.id}" placeholder="Seu AP *">
+                                </div>
+                                <textarea id="comentRev_${prof.id}" class="review-form-text" rows="3" placeholder="Sua avaliação * (mín. 20 caracteres)"></textarea>
+                                <div class="media-upload-area" id="uploadAreaRev_${prof.id}">
+                                    📸 Adicionar foto/vídeo
+                                    <input type="file" id="fileRev_${prof.id}" accept="image/*,video/*" style="display:none" multiple>
+                                </div>
+                                <div id="previewRev_${prof.id}" class="media-previews"></div>
+                                <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+                                    <button class="btn-cancel-review" data-id="${prof.id}">Cancelar</button>
+                                    <button class="btn-submit-review" data-id="${prof.id}" style="background:#F97316; color:white; border:none; padding:8px 20px; border-radius:30px;">Enviar</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
+                
+                const toggleBtn = card.querySelector('.btn-toggle-reviews');
+                if (toggleBtn) {
+                    toggleBtn.onclick = () => {
+                        card.classList.toggle('expanded');
+                        if (card.classList.contains('expanded')) {
+                            toggleBtn.innerHTML = 'Ocultar avaliações e mídias ▴';
+                        } else {
+                            toggleBtn.innerHTML = `Ver ${totalAvaliacoes} ${totalAvaliacoes > 1 ? 'avaliações' : 'avaliação'} e mídias ▾`;
+                        }
+                    };
+                }
                 
                 // Anexa os eventos da galeria para as mídias já existentes no card
                 card.querySelectorAll('.media-previews').forEach(previewContainer => {
