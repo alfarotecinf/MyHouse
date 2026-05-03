@@ -199,6 +199,35 @@
             cursor: pointer;
         }
 
+        /* DESCRIÇÃO DA PÁGINA */
+        .page-description {
+            background: #EFF6FF;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            font-size: 0.85rem;
+            color: #1E3A5F;
+        }
+
+        .page-description h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-description p {
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .page-description ul {
+            list-style-position: inside;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            padding-left: 5px;
+        }
+
         /* CATEGORIAS */
         .categorias-wrapper {
             margin-bottom: 24px;
@@ -679,6 +708,17 @@
             <div class="logo-text">My <span>House</span></div>
         </div>
         <button class="new-post-btn" id="openModalBtn">+ Nova indicação</button>
+    </div>
+
+    <div class="page-description">
+        <h3>Bem-vindo ao My House! 🏡</h3>
+        <p>Este é o nosso catálogo de indicações entre vizinhos. Encontre e compartilhe profissionais de confiança. Aqui você pode:</p>
+        <ul>
+            <li>⭐ Avaliar com estrelas</li>
+            <li>📸 Enviar fotos e vídeos dos serviços</li>
+            <li>💬 Deixar sua experiência registrada</li>
+            <li>📲 Compartilhar indicações no WhatsApp</li>
+        </ul>
     </div>
 
     <div class="categorias-wrapper">
@@ -1246,6 +1286,8 @@
                         });
                         if (error) {
                             alert("Erro: " + error.message);
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = 'Enviar';
                         } else {
                             const textoWhatsApp = gerarTextoWhatsApp(
                                 prof.nome,
@@ -1258,11 +1300,12 @@
                             );
                             if (confirm("✅ Avaliação enviada! Deseja compartilhar no WhatsApp?")) {
                                 window.open(`https://wa.me/?text=${textoWhatsApp}`, '_blank');
+                                // Atrasar a renderização para dar tempo ao popup de abrir
+                                setTimeout(renderizarCards, 500);
+                            } else {
+                                renderizarCards();
                             }
-                            renderizarCards();
                         }
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Enviar';
                     };
                 }
             }
@@ -1398,6 +1441,17 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                 if (error) {
                     alert("Erro ao cadastrar: " + error.message);
                 } else {
+                    modal.classList.remove('active');
+                    document.getElementById('modalNome').value = '';
+                    document.getElementById('modalTelefone').value = '';
+                    document.getElementById('modalDocumento').value = '';
+                    document.getElementById('modalEndereco').value = '';
+                    document.getElementById('modalIndicador').value = '';
+                    document.getElementById('modalAp').value = '';
+                    document.getElementById('modalAvaliacao').value = '';
+                    modalFiles = [];
+                    document.getElementById('modalMediaPreviews').innerHTML = '';
+
                     const textoWhatsApp = gerarTextoWhatsApp(
                         nome,
                         telefone,
@@ -1409,18 +1463,10 @@ Enviado via My House - Indicações entre vizinhos 🏡`;
                     );
                     if (confirm("✅ Profissional cadastrado com sucesso! Deseja compartilhar no WhatsApp?")) {
                         window.open(`https://wa.me/?text=${textoWhatsApp}`, '_blank');
+                        setTimeout(renderizarCards, 500);
+                    } else {
+                        renderizarCards();
                     }
-                    modal.classList.remove('active');
-                    document.getElementById('modalNome').value = '';
-                    document.getElementById('modalTelefone').value = '';
-                    document.getElementById('modalDocumento').value = '';
-                    document.getElementById('modalEndereco').value = '';
-                    document.getElementById('modalIndicador').value = '';
-                    document.getElementById('modalAp').value = '';
-                    document.getElementById('modalAvaliacao').value = '';
-                    modalFiles = [];
-                    document.getElementById('modalMediaPreviews').innerHTML = '';
-                    renderizarCards();
                 }
                 submitBtn.disabled = false;
                 submitBtn.innerText = 'Cadastrar profissional';
