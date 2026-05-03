@@ -1345,28 +1345,29 @@
                 mediaTexto = '\n\n*MÍDIAS DO SERVIÇO:*\n';
                 mediaTexto += mediaUrls.map(url => {
                     const isVideo = isUrlVideo(url);
-                    return `${isVideo ? '📹 Vídeo' : '📷 Foto'}: ${url}`;
+                    // Usando Unicode escapes para garantir a compatibilidade dos emojis
+                    return `${isVideo ? '\u{1F4F9} Vídeo' : '\u{1F4F7} Foto'}: ${url}`;
                 }).join('\n');
             }
 
-            const texto = `Olá vizinhos 🏠
+            const texto = `Olá vizinhos \u{1F3E0}
 
 *INDICAÇÃO DE PROFISSIONAL - MY HOUSE*
 
-📌 *Profissional:* ${profNome}
-📞 *Contato:* ${profTelefone}
-⭐ *Minha nota:* ${estrelas}
+\u{1F4CC} *Profissional:* ${profNome}
+\u{1F4DE} *Contato:* ${profTelefone}
+\u{2B50} *Minha nota:* ${estrelas}
 
 *MINHA EXPERIÊNCIA:*
 "${comentario}"${mediaTexto}
 
 *Compartilhado por:* ${avaliador} (AP ${ap})
 
-🔗 *Veja mais detalhes no app:*
+\u{1F517} *Veja mais detalhes no app:*
 ${APP_URL}
 
 ---
-Enviado via My House - Indicações entre vizinhos 🏡`;
+Enviado via My House - Indicações entre vizinhos \u{1F3E1}`;
 
             return encodeURIComponent(texto);
         }
