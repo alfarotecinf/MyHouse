@@ -1044,7 +1044,7 @@
             const profissionais = await carregarProfissionais();
             let filtrados = categoriaAtiva === 'todos' 
                 ? profissionais 
-                : profissionais.filter(p => p.categoria === categoriaAtiva);
+                : profissionais.filter(p => p.categoria_slug === categoriaAtiva);
             
             if (filtrados.length === 0) {
                 container.innerHTML = `<div style="text-align:center; padding:40px;">🏠 Nenhum profissional encontrado</div>`;
@@ -1086,7 +1086,7 @@
                     <div class="card-header">
                         <div class="prof-title">
                             <span class="prof-name">${escapeHtml(prof.nome)}</span>
-                            <span class="categoria-tag">${getNomeCategoria(prof.categoria)}</span>
+                            <span class="categoria-tag">${getNomeCategoria(prof.categoria_slug)}</span>
                         </div>
                         <div class="rating-stars">${renderStars(media)}<span class="rating-value">(${media})</span></div>
                         <div class="contact-info">
@@ -1287,7 +1287,7 @@
                 const { error } = await supabase.from('profissionais').insert({
                     id: profissionalId,
                     nome,
-                    categoria: categoria_slug,
+                    categoria_slug: categoria_slug,
                     telefone,
                     documento,
                     endereco,
